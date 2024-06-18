@@ -1,0 +1,11 @@
+C:/Users/Kelvin/Desktop/figures/CMakeFiles/leapc_example.dir
+C:/Users/Kelvin/Desktop/figures/CMakeFiles/libExampleConnection.dir
+C:/Users/Kelvin/Desktop/figures/CMakeFiles/CallbackSample.dir
+C:/Users/Kelvin/Desktop/figures/CMakeFiles/ImageSample.dir
+C:/Users/Kelvin/Desktop/figures/CMakeFiles/PollingSample.dir
+C:/Users/Kelvin/Desktop/figures/CMakeFiles/InterpolationSample.dir
+C:/Users/Kelvin/Desktop/figures/CMakeFiles/CheckLicenseFlagSample.dir
+C:/Users/Kelvin/Desktop/figures/CMakeFiles/FiducialTrackingSample.dir
+C:/Users/Kelvin/Desktop/figures/CMakeFiles/MultiDeviceSample.dir
+C:/Users/Kelvin/Desktop/figures/CMakeFiles/ALL_BUILD.dir
+C:/Users/Kelvin/Desktop/figures/CMakeFiles/ZERO_CHECK.dir

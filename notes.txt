@@ -1,0 +1,41 @@
+Notes:
+
+The leap code uses the leapc_python_binding repo to enable coding with Leap Motion in python, getting this repo to work involves running the following commands:
+```
+# Create and activate a virtual environment
+pip install -r requirements.txt
+pip install -e leapc-python-api
+```
+I believe this virtual environment is destroyed everytime the project is closed out so these commands have to be rerun every time but not sure
+
+my leapTest2.py code currently only listens for tracking events, not all events
+
+TODO:
+    - Figure out how to detect gestures(holding up a peace sign, tapping, swiping)
+    - Implement a buffer thread to stop long pauses after a cmd is sent to the robot
+    - Fix TeachMover.reset() and TeachMover.read() not working
+
+
+TeachMover
+    @STEP(Speed, Base, Shoulder, Elbow, Paw, WristRotation, Gripper)
+        - Base: right(+) left(-)
+        - Shoulder: forward(+) backwards(-)
+        - Elbow: down(+) up(-)
+        - Paw: gripper down(+) up(-)
+        - Wrist: counterclockwise(+) clockwise(-)
+        - Gripper: open(+) close(-)
+
+
+Hand attributes:
+    .id:  hand id
+    .type:  "HandType.Left" or "HandType.Right"
+    .palm: represents hand's palm, use this for postional data most of the time
+        .position[x]:  vector position of palm. Has x,y,z components
+    .digits[digit_indx]:  this represents fingers
+        .distal:  1rst segment of finger
+        .intermediate: 2nd segment of finger
+        .proximal: 3rd segment of finger
+        .metacarpal: 4th segment of finger (in palm)
+            .rotation:  Quaternion object for rotation of specific finger bone
+            .next_joint: position of the finger?
+                .x, .y, .z attributes for specific directions
