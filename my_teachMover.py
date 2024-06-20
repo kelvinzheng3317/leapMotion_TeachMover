@@ -24,12 +24,14 @@ class TeachMover:
         if not cmd.endswith("\r"):
             cmd += "\r"
         self.con.write(cmd.encode())
-        reponse = self.con.readline().decode().strip()
-        return reponse
+        response = self.con.readline().decode().strip()
+        print(response)
+        return response
     
     def move(self, spd, j1, j2, j3, j4, j5, j6):
         print(f"@STEP {spd}, {j1}, {j2}, {j3}, {j4+j5}, {j4-j5}, {j6+j3}")
         response = self.send_cmd(f"@STEP {spd}, {j1}, {j2}, {j3}, {j4+j5}, {j4-j5}, {j6+j3}")
+        print(response)
         return response
 
     # FIXME: THIS CURRENTLY DOESN'T SEEM TO BE WORKING -> MAYBE @RESET DOESN'T ACTUALLY RESETS THE POSITION BUT RESETS ROBOT MEMORY??
@@ -47,11 +49,35 @@ class TeachMover:
         print("Closing grip")
         self.send_cmd("@CLOSE")
 
+    def readPosition(self):
+        ret = self.send_cmd("@READ")
+        #Strip the leading status code
+        ret = ret.split('\r')[-1]
+        return ret
+    
+    def returnToZero(self):
+        currentPos = self.readPosition().split(',')
+
+        speed = 240
+        j1 = -int(currentPos[0])
+        j2 = -int(currentPos[1])
+        j3 = -int(currentPos[2])
+        j4 = -int(currentPos[3])
+        j5 = -int(currentPos[4])
+        j6 = -int(currentPos[5])-j3
+        ret = self.move(speed, j1, j2, j3, j4, j5, j6)
+
+        return ret
+
 
 if __name__ == "__main__":
     robot = TeachMover('COM3')
     robot.move(200, 0, 0, 100, 0, 0, 0)
     time.sleep(0.5)
+    # robot.returnToZero()
+    # pos = robot.readPosition()
+    # print(type(pos))
+    # print(pos)
     # robot.reset()
     print("done")
 

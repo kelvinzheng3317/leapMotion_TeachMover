@@ -15,6 +15,17 @@ TODO:
     - Implement a buffer thread to stop long pauses after a cmd is sent to the robot
     - Fix TeachMover.reset() and TeachMover.read() not working
 
+Possible gestures (note that inversed kinematics might still be chosen over this)
+	- OK: position of thumb and index are close, others are not
+	- V: difference in direction of pointer and middle on the plane orthogonal to the palm vector is large enough
+	- 4: thumb also 0 away from while other 4 fingers directonal vectors are relatively orthogonal to the palm vector
+	- fist: every finger but thumb is close to palm
+		- thumbs up: don't use if not needed, pretty similar to fist
+	- 0: position of all fingertips are close together and far from palm
+	- L: difference in direction vector of thumb and index is great enough
+	- pointing
+	- spiderman
+	- 6
 
 TeachMover
     @STEP(Speed, Base, Shoulder, Elbow, Paw, WristRotation, Gripper)
