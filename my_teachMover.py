@@ -12,6 +12,8 @@ import time
 import leap
 
 class TeachMover:
+    m1, m2, m3, m4, m5, m6 = 0, 0, 0, 0, 0, 0
+
     def __init__(self, portID: str, baudrate = 9600):
         try:
             self.con=serial.Serial(portID,baudrate,timeout=3)
@@ -25,14 +27,43 @@ class TeachMover:
             cmd += "\r"
         self.con.write(cmd.encode())
         response = self.con.readline().decode().strip()
-        print(response)
+        # print(response)
         return response
     
     def move(self, spd, j1, j2, j3, j4, j5, j6):
         print(f"@STEP {spd}, {j1}, {j2}, {j3}, {j4+j5}, {j4-j5}, {j6+j3}")
+        # self.update_motors(j1, j2, j3, j4+j5, j4-j5, j6+j3)
+        self.update_motors(j1, j2, j3, j4, j5, j6)
         response = self.send_cmd(f"@STEP {spd}, {j1}, {j2}, {j3}, {j4+j5}, {j4-j5}, {j6+j3}")
-        print(response)
         return response
+
+    def update_motors(self, j1, j2, j3, j4, j5, j6):
+        self.m1 += j1
+        self.m2 += j2
+        self.m3 += j3
+        self.m4 += j4
+        self.m5 += j5
+        self.m6 += j6
+        print("New updated ", end="")
+        self.print_motors()
+    
+    def print_motors(self):
+        print(f"step motors: {self.m1}, {self.m2}, {self.m3}, {self.m4}, {self.m5}, {self.m6}")
+    
+    def returnToZero(self):
+        # currentPos = self.readPosition().split(',')
+
+        # speed = 240
+        # j1 = -int(currentPos[0])
+        # j2 = -int(currentPos[1])
+        # j3 = -int(currentPos[2])
+        # j4 = -int(currentPos[3])
+        # j5 = -int(currentPos[4])
+        # j6 = -int(currentPos[5])-j3
+        print("returning to zero position")
+        # ret = self.move(240, -self.m1, -self.m2, -self.m3, -0.5*(self.m4+self.m5), -0.5*(self.m4-self.m5), -self.m6-self.m3)
+        ret = self.move(240, -self.m1, -self.m2, -self.m3, -self.m4, -self.m5, -self.m6-self.m3)
+        return ret
 
     # FIXME: THIS CURRENTLY DOESN'T SEEM TO BE WORKING -> MAYBE @RESET DOESN'T ACTUALLY RESETS THE POSITION BUT RESETS ROBOT MEMORY??
     def reset(self):
@@ -47,6 +78,7 @@ class TeachMover:
     
     def close_grip(self):
         print("Closing grip")
+        # TODO: UPDATE ROBOT MOTOR VALUES
         self.send_cmd("@CLOSE")
 
     def readPosition(self):
@@ -54,32 +86,19 @@ class TeachMover:
         #Strip the leading status code
         ret = ret.split('\r')[-1]
         return ret
-    
-    def returnToZero(self):
-        currentPos = self.readPosition().split(',')
-
-        speed = 240
-        j1 = -int(currentPos[0])
-        j2 = -int(currentPos[1])
-        j3 = -int(currentPos[2])
-        j4 = -int(currentPos[3])
-        j5 = -int(currentPos[4])
-        j6 = -int(currentPos[5])-j3
-        ret = self.move(speed, j1, j2, j3, j4, j5, j6)
-
-        return ret
 
 
 if __name__ == "__main__":
     robot = TeachMover('COM3')
-    robot.move(200, 0, 0, 100, 0, 0, 0)
+    robot.print_motors()
+    robot.move(240, 100, -50, 40, 50, 10, 30)
     time.sleep(0.5)
-    # robot.returnToZero()
+    robot.returnToZero()
     # pos = robot.readPosition()
     # print(type(pos))
     # print(pos)
     # robot.reset()
-    print("done")
+    print("Done")
 
 # ser = serial.Serial()
 # ser.port = 'COM3'

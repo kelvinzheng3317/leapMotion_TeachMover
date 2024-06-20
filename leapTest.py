@@ -7,6 +7,7 @@ from leap.event_listener import LatestEventListener
 import leap.datatypes as ldt
 
 from my_teachMover import TeachMover
+from IK import InverseKinematics
 
 
 def wait_until(condition: Callable[[], bool], timeout: float = 5, poll_delay: float = 0.01):
@@ -43,6 +44,7 @@ def main():
 
     with connection.open() as open_connection:
         wait_until(lambda: tracking_listening.event is not None)
+        InverseKinematics(0,0,0,0,0)
         prevX, prevY ,prevZ = 0, 0, 0
         while True:
             time.sleep(0.5)

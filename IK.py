@@ -49,6 +49,7 @@ class InverseKinematics:
         
         return step1, step2, step3, step4, step5
 
+    '''
     def moveTo(self, new_x, new_y, new_z, new_left_wrist_motor, new_right_wrist_motor):
         if not self.is_reachable(new_x, new_y, new_z, new_left_wrist_motor, new_right_wrist_motor):
             return None
@@ -62,6 +63,7 @@ class InverseKinematics:
         self.right_wrist_motor = new_right_wrist_motor
         
         return StepValue
+    '''
     
     def is_reachable(self, x, y, z):
         #Calculate the distance from the base to the target
