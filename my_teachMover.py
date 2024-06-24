@@ -31,23 +31,29 @@ class TeachMover:
             cmd += "\r"
 
         # Attempt at threading ver
-        # def msg_robot():
-        #     with self.lock:
-        #         self.con.write(cmd.encode())
-        #         return self.con.readline().decode().strip()
-
-        # thread = threading.Thread(target=msg_robot)
-
+        def msg_robot(cmd):
+            with self.lock:
+                self.con.write(cmd.encode())
+                return self.con.readline().decode().strip()
+        
+        if self.lock.locked():
+                print("Currently locked")
+                return "locked"
+        
+        thread = threading.Thread(target=msg_robot, args=[cmd])
+        response = thread.start()
+        # FIXME: send_cmd will never return a response from the robot since the function will terminate before the thread does
         # print(response)
-        self.con.write(cmd.encode())
-        response = self.con.readline().decode().strip()
+        # self.con.write(cmd.encode())
+        # response = self.con.readline().decode().strip()
         return response
     
     def move(self, spd, j1, j2, j3, j4, j5, j6):
-        print(f"@STEP {spd}, {j1}, {j2}, {j3}, {j4+j5}, {j4-j5}, {j6+j3}")
         # self.update_motors(j1, j2, j3, j4+j5, j4-j5, j6+j3)
-        self.update_motors(j1, j2, j3, j4, j5, j6)
         response = self.send_cmd(f"@STEP {spd}, {j1}, {j2}, {j3}, {j4+j5}, {j4-j5}, {j6+j3}")
+        if response != "locked":
+            print(f"@STEP {spd}, {j1}, {j2}, {j3}, {j4+j5}, {j4-j5}, {j6+j3}")
+            self.update_motors(j1, j2, j3, j4, j5, j6)
         return response
     
     def set_step(self, spd, j1, j2, j3, j4, j5, j6):
@@ -120,11 +126,18 @@ class TeachMover:
         print("Opening grip")
         self.move(240, 0, 0, 0, 0, 0, 400)
 
+    counter = 0
+
     def test_thread(self, num):
         def msg_robot():
+            if self.lock.locked():
+                print(f"Currently locked for msg {num}")
+                return
+
             with self.lock:
                 print(f"starting msg {num}")
-                time.sleep(0.5)
+                self.counter += 1
+                time.sleep(0.2)
                 print(f"finish msg {num}")
 
         thread = threading.Thread(target=msg_robot)
@@ -142,11 +155,22 @@ if __name__ == "__main__":
 
     robot = TeachMover('COM3')
 
-    # NOTE: THREAD TESTING
+    # NOTE: BASIC THREAD TESTING
     # robot.test_thread(1)
     # for i in range(10):
+    #     print(f"Iteration {i}")
     #     robot.test_thread(i)
-    # time.sleep(10)
+    #     time.sleep(0.1)
+    # time.sleep(5)
+    # print(robot.counter)
+
+    # NOTE: ROBOT MOVE THREAD TESTING
+    i = 0
+    while True:
+        print(f"iteration {i}")
+        robot.move(200,100,10,0,0,0,0)
+        time.sleep(0.1)
+        i += 1
 
     # NOTE: GRIPPER TEST
     # robot.open_grip()
@@ -154,11 +178,12 @@ if __name__ == "__main__":
     # robot.print_motors()
 
     # NOTE: MOVE_TO_SET_STEP TEST
-    robot.move(240, 200, -150, 40, -150, -60, 30)
-    robot.print_motors()
-    time.sleep(1)
-    robot.set_step(240,0,0,0,0,0,0)
-    robot.print_motors()
+    # robot.move(240, 200, -150, 40, -150, -60, 30)
+    # robot.print_motors()
+    # time.sleep(1)
+    # robot.set_step(240,0,0,0,0,0,0)
+    # robot.print_motors()
+
     # time.sleep(0.5)
     # robot.returnToZero()
 
