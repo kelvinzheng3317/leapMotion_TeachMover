@@ -57,16 +57,17 @@ class TeachMover:
         return response
     
     def set_step(self, spd, j1, j2, j3, j4, j5, j6):
-        print(f"Moving directly to {j1} {j2} {j3} {j4} {j5} {j6}")
         diff1 = j1 - self.m1
         diff2 = j2 - self.m2
         diff3 = j3 - self.m3
         diff4 = j4 - self.m4
         diff5 = j5 - self.m5
         diff6 = j6 - self.m6
-        self.update_motors(diff1, diff2, diff3, diff4, diff5, diff6)
-        print(f"@STEPS {spd} {diff1}, {diff2}, {diff3}, {diff4}, {diff5}, {diff6}")
         response = self.send_cmd(f"@STEP {spd}, {diff1}, {diff2}, {diff3}, {diff4}, {diff5}, {diff6}")
+        if response != "locked":
+            print(f"Moving directly to {j1} {j2} {j3} {j4} {j5} {j6}")
+            self.update_motors(diff1, diff2, diff3, diff4, diff5, diff6)
+            print(f"@STEPS {spd} {diff1}, {diff2}, {diff3}, {diff4}, {diff5}, {diff6}")
         return response
 
     def update_motors(self, j1, j2, j3, j4, j5, j6):

@@ -11,15 +11,15 @@ I believe this virtual environment is destroyed everytime the project is closed 
 my leapTest2.py code currently only listens for tracking events, not all events
 
 TODO:
-    - Figure out how to detect gestures(holding up a peace sign, tapping, swiping)
-    - Implement a buffer thread to stop long pauses after a cmd is sent to the robot
-    - study inversed kinematics
+    - study inverse kinematics
+    - Fix pinching and O position being too similar
     - Fix TeachMover.reset() and TeachMover.read() not working
 
 Idea: create a new thread that has a run() function that runs the TeachMover command and finishes once it gets a response from the TeachMover.
 Then implement a mutex so that only one thread can exist at any time. 
 
 Inversed kinematics notes:
+- Set limits on the magnitude of @STEP commands can go through in order to protect the robot from going into unsafe positions
 - Set the robot reference point to the wrist instead of the center of the gripper makes things easier.
 - Solve for steps you need on the robot -> subtract robot's current step -> move this difference
 - coordinate system for leapmotion doesnt' match the coordinate system for the robot so u have to convert it

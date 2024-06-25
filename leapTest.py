@@ -11,6 +11,7 @@ import leap.datatypes as ldt
 
 from my_teachMover import TeachMover
 from IK_Zilin import InverseKinematics
+from IK import my_InverseKinematics
 
 
 def wait_until(condition: Callable[[], bool], timeout: float = 5, poll_delay: float = 0.01):
@@ -66,15 +67,13 @@ def V_pos(hand):
 def main():
     # Note that this means we will only have tracking events
     tracking_listening = LatestEventListener(leap.EventType.Tracking)
-
     connection = leap.Connection()
     connection.add_listener(tracking_listening)
-
     robot = TeachMover('COM3')
 
     with connection.open() as open_connection:
         wait_until(lambda: tracking_listening.event is not None)
-        IK = InverseKinematics(0,0,0,0,0)
+        IK = my_InverseKinematics()
         firstFrame = True
         prevX, prevY ,prevZ = 0, 0, 0
         while True:
@@ -93,9 +92,10 @@ def main():
                     # Moves robot based off of inverse kinematics
                     if firstFrame:
                         firstFrame = False
-                    else:
+                    elif math.sqrt((x-prevX)**2 + (y-prevY)**2 + (z-prevZ)**2) > 30:
                         j1, j2, j3, j4, j5 = IK.FindStep(x - prevX, y - prevY, z - prevZ, 0, 0)
-                        robot.set_step(240, j1, j2, j3, j4, j5, 0)
+                        print(f"motor steps: {j1} {j2} {j3} {j4} {j5}")
+                        # robot.set_step(150, j1, j2, j3, j4, j5, 0)
 
                     # NOTE: MASSIVE PAUSE IN PROGRAM EVERYTIME THERE IS A ROBOT MOVE -> PROBABLY NEED TO IMPLEMENT THREADS
                     # xChange, yChange, zChange = 0, 0, 0
