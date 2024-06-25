@@ -66,7 +66,7 @@ if __name__ == "__main__":
     # NOTE: Testing IK and TeachMover in combination
     robot = TeachMover('COM3')
     # the current steps for each motor must be initalized, this is my guesses for what the default position motors are
-    robot.set_motor_vals(1768, 1100, 1040, 0, 0, 0)
+    # robot.set_motor_vals(1768, 1100, 1040, 0, 0, 0)
     robot.print_motors()
 
     j1, j2, j3, j4, j5 = IK.FindStep(0,0,2,0,0)

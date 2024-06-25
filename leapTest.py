@@ -115,7 +115,7 @@ def main():
                     # Returns to hand to its 0 position if user makes a O with their hands
                     if O_pos(hand):
                         print("Hand in O position: ", end="")
-                        robot.returnToZero()
+                        robot.returnToStart()
                     elif V_pos(hand):
                         print("Hand in V position: ", end="")
                         robot.open_grip()

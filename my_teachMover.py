@@ -24,6 +24,13 @@ class TeachMover:
         except serial.SerialException as e:
             print("Error")
             return
+        # Sets motor step attributes to starting position values
+        self.m1 = 1768
+        self.m2 = 1100
+        self.m3 = 1040
+        self.m4 = 0
+        self.m5 = 0
+        self.m6 = 0
         self.lock = threading.Lock()
 
     def send_cmd(self, cmd:str):
@@ -96,10 +103,8 @@ class TeachMover:
     def print_motors(self):
         print(f"step motors: {self.m1}, {self.m2}, {self.m3}, {self.m4}, {self.m5}, {self.m6}")
     
-    def returnToZero(self):
+    def returnToStart(self):
         # currentPos = self.readPosition().split(',')
-
-        # speed = 240
         # j1 = -int(currentPos[0])
         # j2 = -int(currentPos[1])
         # j3 = -int(currentPos[2])
@@ -107,8 +112,7 @@ class TeachMover:
         # j5 = -int(currentPos[4])
         # j6 = -int(currentPos[5])-j3
         print("returning to zero position")
-        # ret = self.move(240, -self.m1, -self.m2, -self.m3, -0.5*(self.m4+self.m5), -0.5*(self.m4-self.m5), -self.m6-self.m3)
-        ret = self.move(240, -self.m1, -self.m2, -self.m3, -self.m4, -self.m5, -self.m6)
+        ret = self.move(240, 1768-self.m1, 1100-self.m2, 1040-self.m3, -self.m4, -self.m5, -self.m6)
         return ret
 
     # Resets what the robot considers its "0 Position"
@@ -142,8 +146,12 @@ class TeachMover:
         print("Opening grip")
         self.move(240, 0, 0, 0, 0, 0, 400)
 
-    counter = 0
+    def lock_wait(self):
+        while self.lock.locked():
+            continue
+        return
 
+    counter = 0
     def test_thread(self, num):
         def msg_robot():
             if self.lock.locked():
@@ -172,7 +180,9 @@ if __name__ == "__main__":
     robot = TeachMover('COM3')
     # response = robot.read_pos()
     # print(response)
-    robot.move(240, 1768, 0,0,0,0,0)
+    robot.move(240, 100,100,-200,0,0,0)
+    robot.lock_wait()
+    robot.returnToStart()
 
     # NOTE: BASIC THREAD TESTING
     # robot.test_thread(1)
