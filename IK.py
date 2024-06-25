@@ -1,4 +1,5 @@
 import math
+from my_teachMover import TeachMover
 
 class my_InverseKinematics:
     # TeachMover2 Geometrical Paramaters (inches)
@@ -20,16 +21,17 @@ class my_InverseKinematics:
         self.z = z
         return
     
+    # Uses the robot's current coordinates to determine what the new stepper values after given change
     # FIXME: add the ability to control gripper angle based off palm vector
     def FindStep(self, dx, dy, dz, dlw, drw):
         x = self.x + dx
         y = self.y + dy
         z = self.z + dz
-        print(f"x: {x}, y: {y}, z: {z}")
+        print(f"Robot target coordinates - x: {x}, y: {y}, z: {z}")
         z0 = z - self.H
         Lxy = math.sqrt(x**2 + y**2)
         l1 = math.sqrt(Lxy**2 + z0**2) / 2
-        print(f"z0: {z0}, Lxy: {Lxy}, l1: {l1}")
+        # print(f"z0: {z0}, Lxy: {Lxy}, l1: {l1}")
 
         try:
             phi1 = math.acos(l1/self.L)
@@ -42,23 +44,36 @@ class my_InverseKinematics:
             print("Out of robot's effective range")
             return 0,0,0,0,0
         
-        step1 = int(theta1 * self.B_C)
-        step2 = int(theta2 * self.S_C)
-        step3 = int(theta3 * self.E_C)
-        print(f"NO ERROR - step1: {step1}, step2: {step2}, step3: {step3}")
-        return step1, step2, step3, 0, 0 # returning 0's for step4 and step5 so return matches Zilin's IK implementation, makes changing implementations simpler
+        step1 = int(theta1 * self.B_C) + 1768
+        step2 = int((math.radians(90) - theta2) * self.S_C) + 1100
+        step3 = int((math.radians(90) - theta3) * self.E_C) 
+        print(f"IK results - step1: {step1}, step2: {step2}, step3: {step3}")
+        return step1, step2, step3, 0, 0 # returning 0's for step4 and step5 so number of return values matches Zilin's IK implementation, makes switch btw implementations easier
     
     def getCoords(self):
         return self.x, self.y, self.z
 
-    def updateCoords(self, x, y, z):
-        self.x = x
-        self.y = y
-        self.z = z
+    # update robots coordinates
+    def incrCoords(self, x, y, z):
+        self.x += x
+        self.y += y
+        self.z += z
     
 
 if __name__ == "__main__":
     IK = my_InverseKinematics()
+
+    # NOTE: Testing IK and TeachMover in combination
+    robot = TeachMover('COM3')
+    # the current steps for each motor must be initalized, this is my guesses for what the default position motors are
+    robot.set_motor_vals(1768, 1100, 1040, 0, 0, 0)
+    robot.print_motors()
+
+    j1, j2, j3, j4, j5 = IK.FindStep(0,0,2,0,0)
+    # print(f"target motor steps: {j1} {j2} {j3} {j4} {j5}") # Default steps is 3536, 3536, 2079
+    robot.set_step(200, j1, j2, j3, j4, j5, 0)
+
+    # NOTE: Testing ranges for dx,dy,dz
     # dx, dy, dz = -7, -7, -7
     # while dx < 7:
     #     while dy < 7: 
@@ -73,8 +88,10 @@ if __name__ == "__main__":
     #     dz = -7
 
     # dz limits determined by dx, dy, and curr position ->  can go high as almost 7
-    dx, dy, dz = 0, 0, -7
-    while dz < 7:
-                print(f"dx: {dx}, dy: {dy}, dz: {dz}")
-                IK.FindStep(dx,dy,dz,0,0)
-                dz += 1
+    # dx, dy, dz = 0, 0, -7
+    # while dz < 7:
+    #             print(f"dx: {dx}, dy: {dy}, dz: {dz}")
+    #             IK.FindStep(dx,dy,dz,0,0)
+    #             dz += 1
+
+

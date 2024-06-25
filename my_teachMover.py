@@ -53,10 +53,15 @@ class TeachMover:
         response = self.send_cmd(f"@STEP {spd}, {j1}, {j2}, {j3}, {j4+j5}, {j4-j5}, {j6+j3}")
         if response != "locked":
             print(f"@STEP {spd}, {j1}, {j2}, {j3}, {j4+j5}, {j4-j5}, {j6+j3}")
-            self.update_motors(j1, j2, j3, j4, j5, j6)
+            self.increment_motors(j1, j2, j3, j4, j5, j6)
         return response
     
     def set_step(self, spd, j1, j2, j3, j4, j5, j6):
+        # prevent overextending the robot
+        if (j1>7072 or j1<0 or j2>7072 or j2<0 or j3>4158 or j3<0 or j4>1536 or j4<0 or j5>1536 or j5<0 or j6>2330 or j6<0):
+            print("Given motor step values are out of range")
+            return
+        
         diff1 = j1 - self.m1
         diff2 = j2 - self.m2
         diff3 = j3 - self.m3
@@ -65,12 +70,12 @@ class TeachMover:
         diff6 = j6 - self.m6
         response = self.send_cmd(f"@STEP {spd}, {diff1}, {diff2}, {diff3}, {diff4}, {diff5}, {diff6}")
         if response != "locked":
-            print(f"Moving directly to {j1} {j2} {j3} {j4} {j5} {j6}")
-            self.update_motors(diff1, diff2, diff3, diff4, diff5, diff6)
+            print(f"Going to motor steps {j1} {j2} {j3} {j4} {j5} {j6}")
+            self.increment_motors(diff1, diff2, diff3, diff4, diff5, diff6)
             print(f"@STEPS {spd} {diff1}, {diff2}, {diff3}, {diff4}, {diff5}, {diff6}")
         return response
 
-    def update_motors(self, j1, j2, j3, j4, j5, j6):
+    def increment_motors(self, j1, j2, j3, j4, j5, j6):
         self.m1 += j1
         self.m2 += j2
         self.m3 += j3
@@ -79,6 +84,14 @@ class TeachMover:
         self.m6 += j6
         print("New updated ", end="")
         self.print_motors()
+
+    def set_motor_vals(self, m1, m2, m3, m4, m5, m6):
+        self.m1 = m1
+        self.m2 = m2
+        self.m3 = m3
+        self.m4 = m4
+        self.m5 = m5
+        self.m6 = m6
     
     def print_motors(self):
         print(f"step motors: {self.m1}, {self.m2}, {self.m3}, {self.m4}, {self.m5}, {self.m6}")
@@ -106,9 +119,11 @@ class TeachMover:
     
     def read_pos(self):
         print("Reading position")
-        pos = self.send_cmd("@READ")
+        cmd = "@READ"
+        self.con.write(cmd.encode())
+        response = self.con.readline().decode().strip()
         #Strip the leading status code
-        return pos
+        return response
 
     def readPosition(self):
         ret = self.send_cmd("@READ")
@@ -155,6 +170,9 @@ if __name__ == "__main__":
     # print(f"results: {j1}, {j2}, {j3}, {j4}, {j5}")
 
     robot = TeachMover('COM3')
+    # response = robot.read_pos()
+    # print(response)
+    robot.move(240, 1768, 0,0,0,0,0)
 
     # NOTE: BASIC THREAD TESTING
     # robot.test_thread(1)
@@ -166,12 +184,12 @@ if __name__ == "__main__":
     # print(robot.counter)
 
     # NOTE: ROBOT MOVE THREAD TESTING
-    i = 0
-    while True:
-        print(f"iteration {i}")
-        robot.move(200,100,10,0,0,0,0)
-        time.sleep(0.1)
-        i += 1
+    # i = 0
+    # while True:
+    #     print(f"iteration {i}")
+    #     robot.move(200,100,10,0,0,0,0)
+    #     time.sleep(0.1)
+    #     i += 1
 
     # NOTE: GRIPPER TEST
     # robot.open_grip()

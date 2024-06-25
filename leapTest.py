@@ -70,6 +70,7 @@ def main():
     connection = leap.Connection()
     connection.add_listener(tracking_listening)
     robot = TeachMover('COM3')
+    robot.set_motor_vals(1768, 1100, 1040, 0, 0, 0)
 
     with connection.open() as open_connection:
         wait_until(lambda: tracking_listening.event is not None)
@@ -84,44 +85,28 @@ def main():
                 # finger: distal, intermediate, proximal, metacarpal
                 if len(event.hands) > 0:
                     hand = event.hands[0]
-                    x = hand.palm.position[2] * 0.1
-                    y = hand.palm.position[0] * 0.1
-                    z = hand.palm.position[1] * 0.1
+                    x = hand.palm.position[2] * 0.05
+                    y = hand.palm.position[0] * 0.05
+                    z = hand.palm.position[1] * 0.05
                     print(f"x: {x}, y: {y}, z: {y} ")
-                    
+
+                    diffX = x - prevX
+                    diffY = y - prevY
+                    diffZ = z - prevZ
+
                     # Moves robot based off of inverse kinematics
                     if firstFrame:
                         firstFrame = False
-                    elif math.sqrt((x-prevX)**2 + (y-prevY)**2 + (z-prevZ)**2) > 30:
-                        j1, j2, j3, j4, j5 = IK.FindStep(x - prevX, y - prevY, z - prevZ, 0, 0)
-                        print(f"motor steps: {j1} {j2} {j3} {j4} {j5}")
-                        # robot.set_step(150, j1, j2, j3, j4, j5, 0)
-
-                    # NOTE: MASSIVE PAUSE IN PROGRAM EVERYTIME THERE IS A ROBOT MOVE -> PROBABLY NEED TO IMPLEMENT THREADS
-                    # xChange, yChange, zChange = 0, 0, 0
-                    # if (x - prevX > 50):
-                    #     print("moving right")
-                    #     xChange = 100
-                    # elif (x - prevX < -50):
-                    #     print("moving left")
-                    #     xChange = -100
-
-                    # if (y - prevY > 50):
-                    #     print("moving up")
-                    #     yChange = -100
-                    # elif (y - prevY < -50):
-                    #     print("moving down")
-                    #     yChange = 100
-                    
-                    # if (z - prevZ > 50):
-                    #     print("moving forward")
-                    #     zChange = 100
-                    # elif (z - prevZ < -50):
-                    #     print("moving backwards")
-                    #     zChange = -100
-
-                    # if (xChange != 0 or yChange != 0 or zChange != 0):
-                    #     robot.move(200, xChange, yChange, zChange, 0, 0, 0)
+                    else:
+                        # print(f"total distance change = {math.sqrt((diffX)**2 + (diffY)**2 + (diffZ)**2)}")
+                        if math.sqrt((diffX)**2 + (diffY)**2 + (diffZ)**2) > 0.1:
+                            j1, j2, j3, j4, j5 = IK.FindStep(diffX, diffY, diffZ, 0, 0)
+                            if j1 != 0 or j2 != 0 or j3 !=0 or j4 != 0 or j5 != 0:
+                                print("----- Moving Robot -----")
+                                print(f"motor steps: {j1} {j2} {j3} {j4} {j5}")
+                                IK.incrCoords(diffX, diffY, diffZ)
+                                robot.set_step(150, j1, j2, j3, j4, j5, 0)
+                                print("------------------------")
 
                     prevX = x
                     prevY = y

@@ -6,9 +6,15 @@ The leap code uses the leapc_python_binding repo to enable coding with Leap Moti
 pip install -r requirements.txt
 pip install -e leapc-python-api
 ```
-I believe this virtual environment is destroyed everytime the project is closed out so these commands have to be rerun every time but not sure
+sometimes this virtual environment is destroyed, and when this happens, these commands have to be rerun
 
-my leapTest2.py code currently only listens for tracking events, not all events
+Robot default position - set correct motor steps using robot.set_motor_vals(1768, 1100, 1040, 0, 0, 0)
+    - base: 1768
+    - shoulder: 1100
+    - elbow: 1040
+    - left wrist: 
+    - right wrist:
+    - gripper: 
 
 TODO:
     - study inverse kinematics
@@ -45,6 +51,7 @@ TeachMover
         - Wrist: counterclockwise(+) clockwise(-)
         - Gripper: open(+) close(-)
 
+my leapTest2.py code currently only listens for tracking events, not all events
 
 Hand attributes:
     .id:  hand id
@@ -59,3 +66,30 @@ Hand attributes:
             .rotation:  Quaternion object for rotation of specific finger bone
             .next_joint: position of the finger?
                 .x, .y, .z attributes for specific directions
+
+
+OLD MOVEMENT BASIC MOVEMENT CODE THAT DOESN'T USE INVERSE kinematics
+# xChange, yChange, zChange = 0, 0, 0
+                    # if (diffX > 50):
+                    #     print("moving right")
+                    #     xChange = 100
+                    # elif (diffX < -50):
+                    #     print("moving left")
+                    #     xChange = -100
+
+                    # if (diffY > 50):
+                    #     print("moving up")
+                    #     yChange = -100
+                    # elif (diffY < -50):
+                    #     print("moving down")
+                    #     yChange = 100
+                    
+                    # if (diffZ > 50):
+                    #     print("moving forward")
+                    #     zChange = 100
+                    # elif (diffZ < -50):
+                    #     print("moving backwards")
+                    #     zChange = -100
+
+                    # if (xChange != 0 or yChange != 0 or zChange != 0):
+                    #     robot.move(200, xChange, yChange, zChange, 0, 0, 0)
