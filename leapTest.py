@@ -106,27 +106,27 @@ def main():
                     diffY = y - prevY
                     diffZ = z - prevZ
 
-                    # # Moves robot based off of inverse kinematics
-                    # if firstFrame:
-                    #     firstFrame = False
-                    # else:
-                    #     # print(f"total distance change = {math.sqrt((diffX)**2 + (diffY)**2 + (diffZ)**2)}")
-                    #     if math.sqrt((diffX)**2 + (diffY)**2 + (diffZ)**2) > 0.5:
-                    #         j1, j2, j3, j4, j5 = IK.FindStep(diffX, diffY, diffZ, 0, 0)
-                    #         if j1 != 0 or j2 != 0 or j3 !=0 or j4 != 0 or j5 != 0:
-                    #             print("----- Moving Robot -----")
-                    #             print(f"motor steps: {j1} {j2} {j3} {j4} {j5}")
-                    #             IK.incrCoords(diffX, diffY, diffZ)
-                    #             robot.set_step(240, j1, j2, j3, j4, j5, 0)
-                    #             print("------------------------")
+                    # Moves robot based off of inverse kinematics
+                    if firstFrame:
+                        firstFrame = False
+                    else:
+                        # print(f"total distance change = {math.sqrt((diffX)**2 + (diffY)**2 + (diffZ)**2)}")
+                        if math.sqrt((diffX)**2 + (diffY)**2 + (diffZ)**2) > 0.5:
+                            j1, j2, j3, j4, j5 = IK.FindStep(diffX, diffY, diffZ, 0, 0)
+                            if j1 != 0 or j2 != 0 or j3 !=0 or j4 != 0 or j5 != 0:
+                                print("----- Moving Robot -----")
+                                print(f"motor steps: {j1} {j2} {j3} {j4} {j5}")
+                                IK.incrCoords(diffX, diffY, diffZ)
+                                robot.set_step(240, j1, j2, j3, j4, j5, 0)
+                                print("------------------------")
 
                     prevX = x
                     prevY = y
                     prevZ = z
 
                     # Returns to hand to its 0 position if user makes a O with their hands
-                    if O_pos(hand):
-                        print("O position: ", end="")
+                    if hand.grab_strength > 0.95:
+                        print("Fist position: ", end="")
                         robot.returnToStart()
                     elif V_pos(hand):
                         print("V position: ", end="")
