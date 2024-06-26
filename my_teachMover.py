@@ -18,7 +18,7 @@ class TeachMover:
 
     def __init__(self, portID: str, baudrate = 9600):
         try:
-            self.con=serial.Serial(portID,baudrate,timeout=3)
+            self.con=serial.Serial(portID,baudrate,timeout=2)
             print("Success")
 
         except serial.SerialException as e:
@@ -30,7 +30,7 @@ class TeachMover:
         self.m3 = 1040
         self.m4 = 0
         self.m5 = 0
-        self.m6 = 0
+        self.m6 = 750
         self.lock = threading.Lock()
 
     def send_cmd(self, cmd:str):
@@ -57,10 +57,16 @@ class TeachMover:
     
     def move(self, spd, j1, j2, j3, j4, j5, j6):
         # self.update_motors(j1, j2, j3, j4+j5, j4-j5, j6+j3)
-        response = self.send_cmd(f"@STEP {spd}, {j1}, {j2}, {j3}, {j4+j5}, {j4-j5}, {j6+j3}")
+        gripper_adj = 0
+        if j3 > 0:
+            gripper_adj = int(0.5*j3)
+        elif j3 < 0:
+            gripper_adj = int(0.25*j3)
+        cmd = f"@STEP {spd}, {j1}, {j2}, {j3}, {j4+j5}, {j4-j5}, {j6+gripper_adj}"
+        response = self.send_cmd(cmd)
         if response != "locked":
-            print(f"@STEP {spd}, {j1}, {j2}, {j3}, {j4+j5}, {j4-j5}, {j6+j3}")
-            self.increment_motors(j1, j2, j3, j4, j5, j6)
+            print(cmd)
+            self.increment_motors(j1, j2, j3, j4+j5, j4-j5, j6)
         return response
     
     def set_step(self, spd, j1, j2, j3, j4, j5, j6):
@@ -68,18 +74,24 @@ class TeachMover:
         if (j1>7072 or j1<0 or j2>7072 or j2<0 or j3>4158 or j3<0 or j4>1536 or j4<0 or j5>1536 or j5<0 or j6>2330 or j6<0):
             print("Given motor step values are out of range")
             return
-        
+        gripper_adj = 0
         diff1 = j1 - self.m1
         diff2 = j2 - self.m2
         diff3 = j3 - self.m3
         diff4 = j4 - self.m4
         diff5 = j5 - self.m5
         diff6 = j6 - self.m6
-        response = self.send_cmd(f"@STEP {spd}, {diff1}, {diff2}, {diff3}, {diff4}, {diff5}, {diff6}")
+        if diff3 > 0:
+            gripper_adj = int(0.5*diff3)
+        elif diff3 < 0:
+            gripper_adj = int(0.25*diff3)
+        # FIXME: diff2 causes the gripper to open and close
+        cmd = f"@STEP {spd}, {diff1}, {diff2}, {diff3}, {diff4+diff5}, {diff4-diff5}, {diff6+gripper_adj}"
+        response = self.send_cmd(cmd)
         if response != "locked":
             print(f"Going to motor steps {j1} {j2} {j3} {j4} {j5} {j6}")
-            self.increment_motors(diff1, diff2, diff3, diff4, diff5, diff6)
-            print(f"@STEPS {spd} {diff1}, {diff2}, {diff3}, {diff4}, {diff5}, {diff6}")
+            self.increment_motors(diff1, diff2, diff3, diff4+diff5, diff4-diff5, diff6)
+            print(cmd)
         return response
 
     def increment_motors(self, j1, j2, j3, j4, j5, j6):
@@ -112,7 +124,7 @@ class TeachMover:
         # j5 = -int(currentPos[4])
         # j6 = -int(currentPos[5])-j3
         print("returning to zero position")
-        ret = self.move(240, 1768-self.m1, 1100-self.m2, 1040-self.m3, -self.m4, -self.m5, -self.m6)
+        ret = self.move(240, 1768-self.m1, 1100-self.m2, 1040-self.m3, -self.m4, -self.m5, 750-self.m6)
         return ret
 
     # Resets what the robot considers its "0 Position"
@@ -138,13 +150,16 @@ class TeachMover:
     def close_grip(self):
         print("Closing grip")
         # TODO: UPDATE ROBOT MOTOR VALUES
-        # THE LINE BELOW CLOSES BUT ITS VERY SLOW SO I'M USING A MOVE INSTEAD
+        # @CLOSE IS VERY SLOW SO I'M USING A MOVE INSTEAD
         # self.send_cmd("@CLOSE")
-        self.move(240, 0, 0, 0, 0, 0, -500)
+        self.move(240, 0, 0, 0, 0, 0, -self.m6)
 
     def open_grip(self):
-        print("Opening grip")
-        self.move(240, 0, 0, 0, 0, 0, 400)
+        if self.m6 < 900:
+            print("Opening grip")
+            self.move(240, 0, 0, 0, 0, 0, 900-self.m6)
+        else:
+            print("Grip already open")
 
     def lock_wait(self):
         while self.lock.locked():
@@ -180,7 +195,8 @@ if __name__ == "__main__":
     robot = TeachMover('COM3')
     # response = robot.read_pos()
     # print(response)
-    robot.move(240, 100,100,-200,0,0,0)
+    robot.move(240, 0,0,0,0,0,900)
+    # robot.set_step(240, 1768, 1100, 440, 0, 0, 750)
     robot.lock_wait()
     robot.returnToStart()
 

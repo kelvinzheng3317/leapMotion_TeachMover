@@ -34,7 +34,7 @@ def find_distance(point1: ldt.Vector, point2: ldt.Vector):
 def pinching(finger1: ldt.Vector, finger2: ldt.Vector):
     abs_diff = find_distance(finger1, finger2)
     # print(f"thumb and index distance: {math.sqrt(abs_diff[0]**2 + abs_diff[1]**2 + abs_diff[2]**2)}")
-    if (math.sqrt(abs_diff[0]**2 + abs_diff[1]**2 + abs_diff[2]**2) < 20):
+    if (math.sqrt(abs_diff[0]**2 + abs_diff[1]**2 + abs_diff[2]**2) < 25):
         return True, abs_diff
     else:
         return False, abs_diff
@@ -53,11 +53,24 @@ def O_pos(hand: ldt.Hand):
 
 # aims to check if there is a large angle btw index and middle finger on the plane that is orthogonal to the palm normal
 def V_pos(hand):
-    index_dir = np.array(list(subtract_vec(hand.digits[1].distal.next_joint, hand.digits[1].metacarpal.next_joint)))
-    middle_dir = np.array(list(subtract_vec(hand.digits[2].distal.next_joint, hand.digits[2].metacarpal.next_joint)))
+    index_base = np.array(list(subtract_vec(hand.digits[1].proximal.next_joint, hand.digits[1].metacarpal.next_joint)))
+    index_tip = np.array(list(subtract_vec(hand.digits[1].distal.next_joint, hand.digits[1].intermediate.next_joint)))
+    middle_base = np.array(list(subtract_vec(hand.digits[2].proximal.next_joint, hand.digits[2].metacarpal.next_joint)))
+    middle__tip = np.array(list(subtract_vec(hand.digits[2].distal.next_joint, hand.digits[2].intermediate.next_joint)))
+    
+    # print(np.dot(index_base_dir, index_tip_dir)/(np.linalg.norm(index_base_dir) * np.linalg.norm(index_tip_dir)))
+    # print(np.dot(middle_base_dir, middle__tip_dir)/(np.linalg.norm(middle_base_dir) * np.linalg.norm(middle__tip_dir)))
+
+    # Checks if the index and middle finger are straightened out
+    index_straight = np.dot(index_base, index_tip)/(np.linalg.norm(index_base) * np.linalg.norm(index_tip))
+    middle_straight = np.dot(middle_base, middle__tip)/(np.linalg.norm(middle_base) * np.linalg.norm(middle__tip))
+    if index_straight < 0.9 or middle_straight < 0.9:
+        return False
+
+    # Checks if the angle btw the index and middle finger in respects to the palm plane is large enough
     palm_norm = np.array(list(hand.palm.normal))
-    index_ortho = index_dir - np.dot(index_dir, palm_norm) * palm_norm
-    middle_ortho = middle_dir - np.dot(middle_dir, palm_norm) * palm_norm
+    index_ortho = index_tip - np.dot(index_tip, palm_norm) * palm_norm
+    middle_ortho = middle__tip - np.dot(middle__tip, palm_norm) * palm_norm
     angle = math.acos(np.dot(index_ortho, middle_ortho)/ (np.linalg.norm(index_ortho) * np.linalg.norm(middle_ortho)))
     if angle > 0.4:
         return True
@@ -70,7 +83,6 @@ def main():
     connection = leap.Connection()
     connection.add_listener(tracking_listening)
     robot = TeachMover('COM3')
-    robot.set_motor_vals(1768, 1100, 1040, 0, 0, 0)
 
     with connection.open() as open_connection:
         wait_until(lambda: tracking_listening.event is not None)
@@ -94,19 +106,19 @@ def main():
                     diffY = y - prevY
                     diffZ = z - prevZ
 
-                    # Moves robot based off of inverse kinematics
-                    if firstFrame:
-                        firstFrame = False
-                    else:
-                        # print(f"total distance change = {math.sqrt((diffX)**2 + (diffY)**2 + (diffZ)**2)}")
-                        if math.sqrt((diffX)**2 + (diffY)**2 + (diffZ)**2) > 0.1:
-                            j1, j2, j3, j4, j5 = IK.FindStep(diffX, diffY, diffZ, 0, 0)
-                            if j1 != 0 or j2 != 0 or j3 !=0 or j4 != 0 or j5 != 0:
-                                print("----- Moving Robot -----")
-                                print(f"motor steps: {j1} {j2} {j3} {j4} {j5}")
-                                IK.incrCoords(diffX, diffY, diffZ)
-                                robot.set_step(150, j1, j2, j3, j4, j5, 0)
-                                print("------------------------")
+                    # # Moves robot based off of inverse kinematics
+                    # if firstFrame:
+                    #     firstFrame = False
+                    # else:
+                    #     # print(f"total distance change = {math.sqrt((diffX)**2 + (diffY)**2 + (diffZ)**2)}")
+                    #     if math.sqrt((diffX)**2 + (diffY)**2 + (diffZ)**2) > 0.5:
+                    #         j1, j2, j3, j4, j5 = IK.FindStep(diffX, diffY, diffZ, 0, 0)
+                    #         if j1 != 0 or j2 != 0 or j3 !=0 or j4 != 0 or j5 != 0:
+                    #             print("----- Moving Robot -----")
+                    #             print(f"motor steps: {j1} {j2} {j3} {j4} {j5}")
+                    #             IK.incrCoords(diffX, diffY, diffZ)
+                    #             robot.set_step(240, j1, j2, j3, j4, j5, 0)
+                    #             print("------------------------")
 
                     prevX = x
                     prevY = y
@@ -114,10 +126,10 @@ def main():
 
                     # Returns to hand to its 0 position if user makes a O with their hands
                     if O_pos(hand):
-                        print("Hand in O position: ", end="")
+                        print("O position: ", end="")
                         robot.returnToStart()
                     elif V_pos(hand):
-                        print("Hand in V position: ", end="")
+                        print("V position: ", end="")
                         robot.open_grip()
                     else:
                         # FIXME: Set isClosed to reflect whether the robot grip is already closed or not

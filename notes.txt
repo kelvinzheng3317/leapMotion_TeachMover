@@ -8,18 +8,22 @@ pip install -e leapc-python-api
 ```
 sometimes this virtual environment is destroyed, and when this happens, these commands have to be rerun
 
-Robot default position - set correct motor steps using robot.set_motor_vals(1768, 1100, 1040, 0, 0, 0)
+Robot default position - this can be manually set using robot.set_motor_vals(1768, 1100, 1040, 0, 0, 750) but will automatically be done via __init__
     - base: 1768
     - shoulder: 1100
     - elbow: 1040
     - left wrist: 
     - right wrist:
-    - gripper: 
+    - gripper: 750
 
 TODO:
-    - study inverse kinematics
+    - Implement the fist gesture
     - Fix pinching and O position being too similar
-    - Fix TeachMover.reset() and TeachMover.read() not working
+    - Make sure the gripper isn't closing and opening as you move the robot arm around w IK
+
+move() makes gripper close as elbow goes up and closes as elbow goes down
+set_step() has the gripper remain the same as elbow goes down but messes up m3 making returnToStart() widen the gripper
+set_step() makes the gripper open as the elbow goes up and then messes up m3 making returnToStart() also widen the gripper
 
 Idea: create a new thread that has a run() function that runs the TeachMover command and finishes once it gets a response from the TeachMover.
 Then implement a mutex so that only one thread can exist at any time. 
