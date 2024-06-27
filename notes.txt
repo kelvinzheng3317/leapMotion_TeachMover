@@ -12,7 +12,7 @@ Robot default position - this can be manually set using robot.set_motor_vals(176
     - base: 1768
     - shoulder: 1100
     - elbow: 1040
-    - left wrist: 
+    - up/down wrist: 420 
     - right wrist:
     - gripper: 750
 

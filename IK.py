@@ -23,20 +23,20 @@ class my_InverseKinematics:
     
     # Uses the robot's current coordinates to determine what the new stepper values after given change
     # FIXME: add the ability to control gripper angle based off palm vector
-    def FindStep(self, dx, dy, dz, dlw, drw):
-        x = self.x + dx
-        y = self.y + dy
-        z = self.z + dz
-        print(f"Robot target coordinates - x: {x}, y: {y}, z: {z}")
-        z0 = z - self.H
-        Lxy = math.sqrt(x**2 + y**2)
+    def FindStep(self, dx, dy, dz, directionChange=0):
+        self.x += dx
+        self.y += dy
+        self.z += dz
+        print(f"Robot target coordinates - x: {self.x}, y: {self.y}, z: {self.z}")
+        z0 = self.z - self.H
+        Lxy = math.sqrt(self.x**2 + self.y**2)
         l1 = math.sqrt(Lxy**2 + z0**2) / 2
         # print(f"z0: {z0}, Lxy: {Lxy}, l1: {l1}")
 
         try:
             phi1 = math.acos(l1/self.L)
             phi3 = math.atan(z0/Lxy)
-            theta1 = math.atan(y/x) # determines the step for the Base motor
+            theta1 = math.atan(self.y/self.x) # determines the step for the Base motor
             theta2 = phi1 + phi3 # determines step for the Shoulder motor
             theta3 = phi3 - phi1 # determines step for the Elbow motor
             print(f"phi1: {math.degrees(phi1)}, phi3: {math.degrees(phi3)}, theta1: {math.degrees(theta1)}, theta2: {math.degrees(theta2)}, theta3: {math.degrees(theta3)}")
@@ -48,7 +48,7 @@ class my_InverseKinematics:
         step2 = int((math.radians(90) - theta2) * self.S_C) + 1100
         step3 = int((math.radians(90) - theta3) * self.E_C) 
         print(f"IK results - step1: {step1}, step2: {step2}, step3: {step3}")
-        return step1, step2, step3, 0, 0 # returning 0's for step4 and step5 so number of return values matches Zilin's IK implementation, makes switch btw implementations easier
+        return step1, step2, step3, 420, 0 # returning 0's for step4 and step5 so number of return values matches Zilin's IK implementation, makes switch btw implementations easier
     
     def getCoords(self):
         return self.x, self.y, self.z

@@ -28,7 +28,7 @@ class TeachMover:
         self.m1 = 1768
         self.m2 = 1100
         self.m3 = 1040
-        self.m4 = 0
+        self.m4 = 420
         self.m5 = 0
         self.m6 = 750
         self.lock = threading.Lock()
@@ -66,7 +66,7 @@ class TeachMover:
         response = self.send_cmd(cmd)
         if response != "locked":
             print(cmd)
-            self.increment_motors(j1, j2, j3, j4+j5, j4-j5, j6)
+            self.increment_motors(j1, j2, j3, j4+j5, j4-j5, j6+gripper_adj)
         return response
     
     def set_step(self, spd, j1, j2, j3, j4, j5, j6):
@@ -93,6 +93,25 @@ class TeachMover:
             self.increment_motors(diff1, diff2, diff3, diff4+diff5, diff4-diff5, diff6)
             print(cmd)
         return response
+    
+    def returnToStart(self):
+        '''
+        currentPos = self.readPosition().split(',')
+        j1 = -int(currentPos[0])
+        j2 = -int(currentPos[1])
+        j3 = -int(currentPos[2])
+        j4 = -int(currentPos[3])
+        j5 = -int(currentPos[4])
+        j6 = -int(currentPos[5])-j3
+        '''
+        # ret = self.move(240, 1768-self.m1, 1100-self.m2, 1040-self.m3, -self.m4, -self.m5, 750-self.m6)
+        cmd = f"@STEP 240, {1768-self.m1}, {1100-self.m2}, {1040-self.m3}, {420-self.m4}, {-self.m5}, {750-self.m6}"
+        response = self.send_cmd(cmd)
+        if response != "locked":
+            print("returning to zero position")
+            self.increment_motors(1768-self.m1, 1100-self.m2, 1040-self.m3, 420-self.m4, -self.m5, 750-self.m6)
+            print(cmd)
+        return response
 
     def increment_motors(self, j1, j2, j3, j4, j5, j6):
         self.m1 += j1
@@ -114,18 +133,6 @@ class TeachMover:
     
     def print_motors(self):
         print(f"step motors: {self.m1}, {self.m2}, {self.m3}, {self.m4}, {self.m5}, {self.m6}")
-    
-    def returnToStart(self):
-        # currentPos = self.readPosition().split(',')
-        # j1 = -int(currentPos[0])
-        # j2 = -int(currentPos[1])
-        # j3 = -int(currentPos[2])
-        # j4 = -int(currentPos[3])
-        # j5 = -int(currentPos[4])
-        # j6 = -int(currentPos[5])-j3
-        print("returning to zero position")
-        ret = self.move(240, 1768-self.m1, 1100-self.m2, 1040-self.m3, -self.m4, -self.m5, 750-self.m6)
-        return ret
 
     # Resets what the robot considers its "0 Position"
     def reset(self):
@@ -155,9 +162,9 @@ class TeachMover:
         self.move(240, 0, 0, 0, 0, 0, -self.m6)
 
     def open_grip(self):
-        if self.m6 < 900:
+        if self.m6 < 1000:
             print("Opening grip")
-            self.move(240, 0, 0, 0, 0, 0, 900-self.m6)
+            self.move(240, 0, 0, 0, 0, 0, 1000-self.m6)
         else:
             print("Grip already open")
 
@@ -195,10 +202,14 @@ if __name__ == "__main__":
     robot = TeachMover('COM3')
     # response = robot.read_pos()
     # print(response)
-    robot.move(240, 0,0,0,0,0,900)
+    robot.open_grip()
+    # robot.move(240, 0,0,0,0,0,0)
     # robot.set_step(240, 1768, 1100, 440, 0, 0, 750)
     robot.lock_wait()
-    robot.returnToStart()
+    robot.open_grip()
+    # robot.lock_wait()
+    # # robot.move(240, 0,0,0,-400,0,0)
+    # robot.returnToStart()
 
     # NOTE: BASIC THREAD TESTING
     # robot.test_thread(1)

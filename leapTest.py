@@ -112,7 +112,7 @@ def main():
                     else:
                         # print(f"total distance change = {math.sqrt((diffX)**2 + (diffY)**2 + (diffZ)**2)}")
                         if math.sqrt((diffX)**2 + (diffY)**2 + (diffZ)**2) > 0.5:
-                            j1, j2, j3, j4, j5 = IK.FindStep(diffX, diffY, diffZ, 0, 0)
+                            j1, j2, j3, j4, j5 = IK.FindStep(diffX, diffY, diffZ, 0)
                             if j1 != 0 or j2 != 0 or j3 !=0 or j4 != 0 or j5 != 0:
                                 print("----- Moving Robot -----")
                                 print(f"motor steps: {j1} {j2} {j3} {j4} {j5}")
@@ -127,9 +127,11 @@ def main():
                     # Returns to hand to its 0 position if user makes a O with their hands
                     if hand.grab_strength > 0.95:
                         print("Fist position: ", end="")
+                        robot.lock_wait()
                         robot.returnToStart()
                     elif V_pos(hand):
                         print("V position: ", end="")
+                        robot.lock_wait()
                         robot.open_grip()
                     else:
                         # FIXME: Set isClosed to reflect whether the robot grip is already closed or not
@@ -140,6 +142,7 @@ def main():
                         isPinching, diffs =  pinching(thumb, index)
                         if (isPinching):
                             print(f"Pinching, distances are: [{diffs[0]}, {diffs[1]}, {diffs[2]}]")
+                            robot.lock_wait()
                             robot.close_grip()
                 
                 # case where no tracking event is occuring
