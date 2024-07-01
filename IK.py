@@ -1,4 +1,5 @@
 import math
+import time
 from my_teachMover import TeachMover
 
 class my_InverseKinematics:
@@ -39,10 +40,10 @@ class my_InverseKinematics:
             theta1 = math.atan(self.y/self.x) # determines the step for the Base motor
             theta2 = phi1 + phi3 # determines step for the Shoulder motor
             theta3 = phi3 - phi1 # determines step for the Elbow motor
-            print(f"phi1: {math.degrees(phi1)}, phi3: {math.degrees(phi3)}, theta1: {math.degrees(theta1)}, theta2: {math.degrees(theta2)}, theta3: {math.degrees(theta3)}")
+            # print(f"phi1: {math.degrees(phi1)}, phi3: {math.degrees(phi3)}, theta1: {math.degrees(theta1)}, theta2: {math.degrees(theta2)}, theta3: {math.degrees(theta3)}")
         except Exception as error:
             print("Math Domain Error")
-            return 0,0,0,0,0
+            return -1,-1,-1,-1,-1
         
         step1 = int(theta1 * self.B_C) + 1768
         step2 = int((math.radians(90) - theta2) * self.S_C) + 1100
@@ -69,9 +70,13 @@ if __name__ == "__main__":
     # robot.set_motor_vals(1768, 1100, 1040, 0, 0, 0)
     robot.print_motors()
 
-    j1, j2, j3, j4, j5 = IK.FindStep(0,0,2,0,0)
+    j1, j2, j3, j4, j5 = IK.FindStep(8, 0, 20)
     # print(f"target motor steps: {j1} {j2} {j3} {j4} {j5}") # Default steps is 3536, 3536, 2079
-    robot.set_step(200, j1, j2, j3, j4, j5, 0)
+    robot.set_step(240, j1, j2, j3, j4, j5, 750)
+    print("")
+    time.sleep(3)
+    robot.lock_wait()
+    robot.returnToStart()
 
     # NOTE: Testing ranges for dx,dy,dz
     # dx, dy, dz = -7, -7, -7

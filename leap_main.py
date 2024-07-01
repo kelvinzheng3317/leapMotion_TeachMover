@@ -11,6 +11,7 @@ import leap.datatypes as ldt
 
 from my_teachMover import TeachMover
 from IK_Zilin import InverseKinematics
+from IK import my_InverseKinematics
 from buffer import Buffer
 
 
@@ -87,6 +88,7 @@ def main():
     with connection.open() as open_connection:
         wait_until(lambda: tracking_listening.event is not None)
         IK = my_InverseKinematics()
+        buffer = Buffer()
         firstFrame = True
         prevX, prevY ,prevZ = 0, 0, 0
         while True:
@@ -98,14 +100,14 @@ def main():
                 if len(event.hands) > 0:
                     hand = event.hands[0]
                     
-                    x = hand.palm.position[2]  * 0.0325 # * 0.05
-                    y = hand.palm.position[0] * 0.01 # * 0.05
-                    z = hand.palm.position[1] * 0.025 # * 0.05
-                    print(f"x: {x}, y: {y}, z: {y} ")
+                    x = hand.palm.position[2]  * 0.016 + 7
+                    y = hand.palm.position[0] * 0.005
+                    z = hand.palm.position[1] * 0.05 - 4
+                    print(f"x: {x}, y: {y}, z: {z} ")
 
-                    diffX = x - prevX
-                    diffY = y - prevY
-                    diffZ = z - prevZ
+                    diffX = x - IK.x
+                    diffY = y - IK.y
+                    diffZ = z - IK.z
 
                     # Moves robot based off of inverse kinematics
                     if firstFrame:
@@ -114,13 +116,7 @@ def main():
                         # print(f"total distance change = {math.sqrt((diffX)**2 + (diffY)**2 + (diffZ)**2)}")
                         if math.sqrt((diffX)**2 + (diffY)**2 + (diffZ)**2) > 0.5:
                             # j1, j2, j3, j4, j5 = IK.FindStep(diffX, diffY, diffZ, 0)
-                            j1, j2, j3, j4, j5 = IK.FindStep(x, y, z, 0)
-                            if j1 != 0 or j2 != 0 or j3 !=0 or j4 != 0 or j5 != 0:
-                                print("----- Moving Robot -----")
-                                print(f"motor steps: {j1} {j2} {j3} {j4} {j5}")
-                                # IK.incrCoords(diffX, diffY, diffZ)
-                                robot.set_step(240, j1, j2, j3, j4, j5, 0)
-                                print("------------------------")
+                            buffer.add([x,y,z])
 
                     prevX = x
                     prevY = y
@@ -128,13 +124,11 @@ def main():
 
                     # Returns to hand to its 0 position if user makes a O with their hands
                     if hand.grab_strength > 0.95:
-                        print("Fist position: ", end="")
-                        robot.lock_wait()
-                        robot.returnToStart()
+                        print("Fist position")
+                        buffer.add("Fist")
                     elif V_pos(hand):
-                        print("V position: ", end="")
-                        robot.lock_wait()
-                        robot.open_grip()
+                        print("V position")
+                        buffer.add("V")
                     else:
                         # FIXME: Set isClosed to reflect whether the robot grip is already closed or not
                         # isClosed = True
@@ -144,9 +138,27 @@ def main():
                         isPinching, diffs =  pinching(thumb, index)
                         if (isPinching):
                             print(f"Pinching, distances are: [{diffs[0]}, {diffs[1]}, {diffs[2]}]")
-                            robot.lock_wait()
+                            buffer.add("Pinch")
+                    
+                    if not robot.lock.locked():
+                        line = buffer.get()
+                        if line is None:
+                            print("No currently pending command")
+                        elif line == "Fist":
+                            robot.returnToStart()
+                        elif line == "V":
+                            robot.open_grip()
+                        elif line == "Pinch":
                             robot.close_grip()
-                
+                        elif isinstance(line, list) and len(line) == 3:
+                            j1, j2, j3, j4, j5 = IK.FindStep(line[0], line[1], line[2], 0)
+                            # if j1 != 0 or j2 != 0 or j3 !=0 or j4 != 0 or j5 != 0:
+                            #     print(f"----- Moving Robot to ({line[0]}, {line[1]}, {line[2]})-----")
+                            #     print(f"motor steps: {j1} {j2} {j3} {j4} {j5}")
+                            #     # IK.incrCoords(diffX, diffY, diffZ)
+                            #     robot.set_step(240, j1, j2, j3, j4, j5, 750)
+                            #     print("------------------------")
+
                 # case where no tracking event is occuring
                 else:
                     firstFrame = True

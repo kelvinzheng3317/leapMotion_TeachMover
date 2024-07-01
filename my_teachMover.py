@@ -14,11 +14,11 @@ import leap
 from IK_Zilin import InverseKinematics
 
 class TeachMover:
-    m1, m2, m3, m4, m5, m6 = 0, 0, 0, 0, 0, 0
+    m1, m2, m3, m4, m5, m6 = 1768, 1100, 1040, 420, 0, 750
 
     def __init__(self, portID: str, baudrate = 9600):
         try:
-            self.con=serial.Serial(portID,baudrate,timeout=2)
+            self.con=serial.Serial(portID,baudrate,timeout=4)
             print("Success")
 
         except serial.SerialException as e:
@@ -84,13 +84,13 @@ class TeachMover:
         if diff3 > 0:
             gripper_adj = int(0.5*diff3)
         elif diff3 < 0:
-            gripper_adj = int(0.25*diff3)
+            gripper_adj = int(0.5*diff3)
         # FIXME: diff2 causes the gripper to open and close
         cmd = f"@STEP {spd}, {diff1}, {diff2}, {diff3}, {diff4+diff5}, {diff4-diff5}, {diff6+gripper_adj}"
         response = self.send_cmd(cmd)
         if response != "locked":
             print(f"Going to motor steps {j1} {j2} {j3} {j4} {j5} {j6}")
-            self.increment_motors(diff1, diff2, diff3, diff4+diff5, diff4-diff5, diff6)
+            self.increment_motors(diff1, diff2, diff3, diff4+diff5, diff4-diff5, diff6+gripper_adj)
             print(cmd)
         return response
     
@@ -202,14 +202,14 @@ if __name__ == "__main__":
     robot = TeachMover('COM3')
     # response = robot.read_pos()
     # print(response)
-    robot.open_grip()
+    # robot.open_grip()
     # robot.move(240, 0,0,0,0,0,0)
-    # robot.set_step(240, 1768, 1100, 440, 0, 0, 750)
-    robot.lock_wait()
-    robot.open_grip()
+    robot.set_step(240, 1768, 1100, 1040, 420, 400, 750)
     # robot.lock_wait()
+    # robot.open_grip()
+    robot.lock_wait()
     # # robot.move(240, 0,0,0,-400,0,0)
-    # robot.returnToStart()
+    robot.returnToStart()
 
     # NOTE: BASIC THREAD TESTING
     # robot.test_thread(1)
