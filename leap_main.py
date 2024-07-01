@@ -11,7 +11,7 @@ import leap.datatypes as ldt
 
 from my_teachMover import TeachMover
 from IK_Zilin import InverseKinematics
-from IK import my_InverseKinematics
+from buffer import Buffer
 
 
 def wait_until(condition: Callable[[], bool], timeout: float = 5, poll_delay: float = 0.01):
