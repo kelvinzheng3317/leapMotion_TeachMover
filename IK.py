@@ -24,9 +24,9 @@ class my_InverseKinematics:
     # Uses the robot's current coordinates to determine what the new stepper values after given change
     # FIXME: add the ability to control gripper angle based off palm vector
     def FindStep(self, dx, dy, dz, directionChange=0):
-        self.x += dx
-        self.y += dy
-        self.z += dz
+        self.x = dx
+        self.y = dy
+        self.z = dz
         print(f"Robot target coordinates - x: {self.x}, y: {self.y}, z: {self.z}")
         z0 = self.z - self.H
         Lxy = math.sqrt(self.x**2 + self.y**2)
@@ -41,7 +41,7 @@ class my_InverseKinematics:
             theta3 = phi3 - phi1 # determines step for the Elbow motor
             print(f"phi1: {math.degrees(phi1)}, phi3: {math.degrees(phi3)}, theta1: {math.degrees(theta1)}, theta2: {math.degrees(theta2)}, theta3: {math.degrees(theta3)}")
         except Exception as error:
-            print("Out of robot's effective range")
+            print("Math Domain Error")
             return 0,0,0,0,0
         
         step1 = int(theta1 * self.B_C) + 1768

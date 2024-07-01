@@ -97,9 +97,10 @@ def main():
                 # finger: distal, intermediate, proximal, metacarpal
                 if len(event.hands) > 0:
                     hand = event.hands[0]
-                    x = hand.palm.position[2] * 0.05
-                    y = hand.palm.position[0] * 0.05
-                    z = hand.palm.position[1] * 0.05
+                    
+                    x = hand.palm.position[2]  * 0.0325 # * 0.05
+                    y = hand.palm.position[0] * 0.01 # * 0.05
+                    z = hand.palm.position[1] * 0.025 # * 0.05
                     print(f"x: {x}, y: {y}, z: {y} ")
 
                     diffX = x - prevX
@@ -112,11 +113,12 @@ def main():
                     else:
                         # print(f"total distance change = {math.sqrt((diffX)**2 + (diffY)**2 + (diffZ)**2)}")
                         if math.sqrt((diffX)**2 + (diffY)**2 + (diffZ)**2) > 0.5:
-                            j1, j2, j3, j4, j5 = IK.FindStep(diffX, diffY, diffZ, 0)
+                            # j1, j2, j3, j4, j5 = IK.FindStep(diffX, diffY, diffZ, 0)
+                            j1, j2, j3, j4, j5 = IK.FindStep(x, y, z, 0)
                             if j1 != 0 or j2 != 0 or j3 !=0 or j4 != 0 or j5 != 0:
                                 print("----- Moving Robot -----")
                                 print(f"motor steps: {j1} {j2} {j3} {j4} {j5}")
-                                IK.incrCoords(diffX, diffY, diffZ)
+                                # IK.incrCoords(diffX, diffY, diffZ)
                                 robot.set_step(240, j1, j2, j3, j4, j5, 0)
                                 print("------------------------")
 
