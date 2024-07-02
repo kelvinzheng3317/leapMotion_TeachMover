@@ -37,6 +37,7 @@ class TeachMover:
         if not cmd.endswith("\r"):
             cmd += "\r"
 
+        '''
         # Attempt at threading ver
         def msg_robot(cmd):
             with self.lock:
@@ -49,10 +50,12 @@ class TeachMover:
         
         thread = threading.Thread(target=msg_robot, args=[cmd])
         response = thread.start()
+        '''
+
         # FIXME: send_cmd will never return a response from the robot since the function will terminate before the thread does
         # print(response)
-        # self.con.write(cmd.encode())
-        # response = self.con.readline().decode().strip()
+        self.con.write(cmd.encode())
+        response = self.con.readline().decode().strip()
         return response
     
     def move(self, spd, j1, j2, j3, j4, j5, j6):
@@ -204,7 +207,7 @@ if __name__ == "__main__":
     # print(response)
     # robot.open_grip()
     # robot.move(240, 0,0,0,0,0,0)
-    robot.set_step(240, 1768, 1100, 1040, 420, 400, 750)
+    robot.set_step(240, 1768, 1600, 1040, 420, 400, 750)
     # robot.lock_wait()
     # robot.open_grip()
     robot.lock_wait()
