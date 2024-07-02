@@ -18,7 +18,8 @@ Robot default position - this can be manually set using robot.set_motor_vals(176
 
 TODO:
     - figure out valid range of values for x,y,z
-        - x: 2 to 10, y: -10 to 10, z: 0.5 to 19
+        -IK - x: 2 to 10, y: -10 to 10, z: 0.5 to 19
+        -camera - x, y: -200 to 200
         - make leapmotion hand position data be within valid ranges
     - Make sure the gripper isn't closing and opening as you move the robot arm around w IK
     - look into kalman filter

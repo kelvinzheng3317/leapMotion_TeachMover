@@ -101,8 +101,8 @@ def main():
                     hand = event.hands[0]
                     
                     x = hand.palm.position[2]  * 0.016 + 7
-                    y = hand.palm.position[0] * 0.005
-                    z = hand.palm.position[1] * 0.05 - 4
+                    y = hand.palm.position[0] * 0.05
+                    z = hand.palm.position[1] * 0.05 - 3
                     print(f"x: {x}, y: {y}, z: {z} ")
 
                     diffX = x - IK.x
@@ -152,12 +152,12 @@ def main():
                             robot.close_grip()
                         elif isinstance(line, list) and len(line) == 3:
                             j1, j2, j3, j4, j5 = IK.FindStep(line[0], line[1], line[2], 0)
-                            # if j1 != 0 or j2 != 0 or j3 !=0 or j4 != 0 or j5 != 0:
-                            #     print(f"----- Moving Robot to ({line[0]}, {line[1]}, {line[2]})-----")
-                            #     print(f"motor steps: {j1} {j2} {j3} {j4} {j5}")
-                            #     # IK.incrCoords(diffX, diffY, diffZ)
-                            #     robot.set_step(240, j1, j2, j3, j4, j5, 750)
-                            #     print("------------------------")
+                            if j1 != 0 or j2 != 0 or j3 !=0 or j4 != 0 or j5 != 0:
+                                print(f"----- Moving Robot to ({line[0]}, {line[1]}, {line[2]})-----")
+                                # print(f"target motor steps: {j1} {j2} {j3} {j4} {j5}")
+                                # IK.incrCoords(diffX, diffY, diffZ)
+                                robot.set_step(240, j1, j2, j3, j4, j5, robot.m6)
+                                print("------------------------")
 
                 # case where no tracking event is occuring
                 else:
