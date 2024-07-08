@@ -25,22 +25,26 @@ class my_InverseKinematics:
     # Uses the robot's current coordinates to determine what the new stepper values after given change
     # FIXME: add the ability to control gripper angle based off palm vector
     def FindStep(self, dx, dy, dz, directionChange=0):
-        self.x = dx
-        self.y = dy
-        self.z = dz
-        print(f"Robot target coordinates - x: {self.x}, y: {self.y}, z: {self.z}")
-        z0 = self.z - self.H
-        Lxy = math.sqrt(self.x**2 + self.y**2)
+        # self.x = dx
+        # self.y = dy
+        # self.z = dz
+        print(f"Robot target coordinates - x: {dx}, y: {dy}, z: {dz}")
+        z0 = dz - self.H
+        Lxy = math.sqrt(dx**2 + dy**2)
         l1 = math.sqrt(Lxy**2 + z0**2) / 2
         # print(f"z0: {z0}, Lxy: {Lxy}, l1: {l1}")
 
         try:
             phi1 = math.acos(l1/self.L)
             phi3 = math.atan(z0/Lxy)
-            theta1 = math.atan(self.y/self.x) # determines the step for the Base motor
+            # determines the step for the Base motor
+            if dx != 0:
+                theta1 = math.atan(dy/dx)
+            else:
+                theta1 = math.asin(dy/Lxy)
             theta2 = phi1 + phi3 # determines step for the Shoulder motor
             theta3 = phi3 - phi1 # determines step for the Elbow motor
-            # print(f"phi1: {math.degrees(phi1)}, phi3: {math.degrees(phi3)}, theta1: {math.degrees(theta1)}, theta2: {math.degrees(theta2)}, theta3: {math.degrees(theta3)}")
+            print(f"phi1: {math.degrees(phi1)}, phi3: {math.degrees(phi3)}, theta1: {math.degrees(theta1)}, theta2: {math.degrees(theta2)}, theta3: {math.degrees(theta3)}")
         except Exception as error:
             print("Math Domain Error")
             return -1,-1,-1,-1,-1
@@ -60,6 +64,11 @@ class my_InverseKinematics:
         self.y += y
         self.z += z
     
+    def setCoords(self, newX, newY, newZ):
+        self.x = newX
+        self.y = newY
+        self.z = newZ
+    
 
 if __name__ == "__main__":
     IK = my_InverseKinematics()
@@ -70,13 +79,11 @@ if __name__ == "__main__":
     # robot.set_motor_vals(1768, 1100, 1040, 0, 0, 0)
     robot.print_motors()
 
-    j1, j2, j3, j4, j5 = IK.FindStep(8, 0, 20)
-    # print(f"target motor steps: {j1} {j2} {j3} {j4} {j5}") # Default steps is 3536, 3536, 2079
-    robot.set_step(240, j1, j2, j3, j4, j5, 750)
-    print("")
-    time.sleep(3)
-    robot.lock_wait()
-    robot.returnToStart()
+    j1, j2, j3, j4, j5 = IK.FindStep(4, -3, 14, 0)
+    print(f"target motor steps: {j1} {j2} {j3} {j4} {j5}") # Default steps is 3536, 3536, 2079
+    # robot.set_step(240, j1, j2, j3, j4, j5, robot.m6)
+    # time.sleep(3)
+    # robot.returnToStart()
 
     # NOTE: Testing ranges for dx,dy,dz
     # dx, dy, dz = -7, -7, -7
