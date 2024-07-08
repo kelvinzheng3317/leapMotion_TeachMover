@@ -90,11 +90,13 @@ def V_pos(hand):
     else:
         return False
 
-def execute_buffer(robot, buffer, IK):
+def execute_buffer(buffer, IK):
+    robot = TeachMover('COM3')
     while not stop_thread:
+        print("execute buffer iteration")
         line = buffer.get()
         if line is None:
-            # print("No currently pending command")
+            print("No currently pending command")
             time.sleep(1)
         elif line == "Fist":
             robot.returnToStart()
@@ -107,9 +109,14 @@ def execute_buffer(robot, buffer, IK):
             if j1 != 0 or j2 != 0 or j3 !=0 or j4 != 0 or j5 != 0:
                 print(f"----- Moving Robot to ({line[0]}, {line[1]}, {line[2]})-----")
                 # print(f"target motor steps: {j1} {j2} {j3} {j4} {j5}")
-                # IK.incrCoords(diffX, diffY, diffZ)
                 robot.set_step(240, j1, j2, j3, j4, j5, robot.m6)
+                # if move_succeed:
+                #     print("set_step move succeeded")
+                # else:
+                #     print("set_step move failed")
+                IK.setCoords(line[0], line[1], line[2])
                 print("------------------------")
+        time.sleep(1)
     print("Stopping thread")
 
 def main():
@@ -117,7 +124,7 @@ def main():
     tracking_listening = LatestEventListener(leap.EventType.Tracking)
     connection = leap.Connection()
     connection.add_listener(tracking_listening)
-    robot = TeachMover('COM3')
+    # robot = TeachMover('COM3')
     global stop_thread
 
     try:
@@ -125,7 +132,7 @@ def main():
             wait_until(lambda: tracking_listening.event is not None)
             IK = my_InverseKinematics()
             buffer = Buffer()
-            thread = threading.Thread(target=execute_buffer, args=(robot, buffer, IK))
+            thread = threading.Thread(target=execute_buffer, args=(buffer, IK))
             thread.start()
 
             firstFrame = True
@@ -140,21 +147,26 @@ def main():
                     if len(event.hands) > 0:
                         hand = event.hands[0]
                         
-                        x = hand.palm.position[2]  * 0.016 + 7
-                        y = hand.palm.position[0] * 0.05
-                        z = hand.palm.position[1] * 0.05 - 3
+                        x = hand.palm.position[2]  * 0.02 + 4 # * 0.016 + 7
+                        y = hand.palm.position[0] * 0.035
+                        z = (hand.palm.position[1] * 0.02) - 4 # 0.05 - 3
+                        if x < 0:
+                            x = 0
+                        # if z < 0: 
+                        #     z = 0
                         print(f"x: {x}, y: {y}, z: {z} ")
 
-                        diffX = x - IK.x
-                        diffY = y - IK.y
-                        diffZ = z - IK.z
+                        diffX = x - prevX
+                        diffY = y - prevY
+                        diffZ = z - prevZ
 
                         # Moves robot based off of inverse kinematics
                         if firstFrame:
                             firstFrame = False
                         else:
                             # print(f"total distance change = {math.sqrt((diffX)**2 + (diffY)**2 + (diffZ)**2)}")
-                            if math.sqrt((diffX)**2 + (diffY)**2 + (diffZ)**2) > 0.5:
+                            if buffer.isEmpty() or math.sqrt((diffX)**2 + (diffY)**2 + (diffZ)**2) > 0.5:
+                                print("adding xyz to buffer")
                                 buffer.add([x,y,z])
 
                         prevX = x
@@ -211,6 +223,45 @@ def main():
         print("Finish program cleanup")
         
 
+def testing():
+    robot = TeachMover('COM3')
+    IK = my_InverseKinematics()
+    cmd = ""
+    while cmd != "stop":
+        cmd = input("Input cmd: ")
+        if cmd == "close":
+            robot.close_grip()
+        elif cmd == "open":
+            robot.open_grip()
+        elif cmd == "reset":
+            robot.returnToStart()
+        elif cmd == "stop":
+            continue
+        else:
+            coords =  cmd.split()
+            if len(coords) != 3:
+                print("Invalid command")
+                continue
+            x = float(coords[0])
+            y = float(coords[1])
+            z = float(coords[2])
+            j1, j2, j3, j4, j5 = IK.FindStep(x, y, z, 0)
+            if j1 != 0 or j2 != 0 or j3 !=0 or j4 != 0 or j5 != 0:
+                print(f"----- Moving Robot to ({x}, {y}, {z})-----")
+                # print(f"target motor steps: {j1} {j2} {j3} {j4} {j5}")
+                move_succeed = robot.set_step(240, j1, j2, j3, j4, j5, robot.m6)
+                if move_succeed:
+                    print("set_step move succeeded")
+                    IK.setCoords(x, y, z)
+                else:
+                    print("set_step move failed")
+                print("------------------------")
+                
+    print("ending program")
+    robot.returnToStart()
+    robot.close_conn()
+
 
 if __name__ == "__main__":
     main()
+    # testing()

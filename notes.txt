@@ -17,12 +17,16 @@ Robot default position - this can be manually set using robot.set_motor_vals(176
     - gripper: 750
 
 TODO:
-    - figure out valid range of values for x,y,z
-        -IK - x: 2 to 10, y: -10 to 10, z: 0.5 to 19
-        -camera - x, y: -200 to 200
-        - make leapmotion hand position data be within valid ranges
-    - Make sure the gripper isn't closing and opening as you move the robot arm around w IK
+    - fix gripper opening as you go up
+        - if u add diff3 to diff6, the grip will open as the elbow goes inward
+        - if u don't add diff3 to diff6, the grip will open as the elbow goes outward
+    - fix difficult moving close to the table due to the leapmotion struggling to detect your hand once you get close to it
+        - Leapmotion coordinates aren't matching robot coordinates, sometimes the robot would be close to the table when z=0 and then later on be the same distance when z=-6 
     - look into kalman filter
+
+- figure out valid range of values for x,y,z
+    -IK - x: 2 to 10, y: -10 to 10, z: 0.5 to 19
+    -camera - x, y: -200 to 200
 
 move() makes gripper close as elbow goes up and closes as elbow goes down
 set_step() has the gripper remain the same as elbow goes down but messes up m3 making returnToStart() widen the gripper

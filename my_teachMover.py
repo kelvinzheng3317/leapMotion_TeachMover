@@ -11,26 +11,27 @@ import threading
 #     print(f"Failed to import module: {e}")
 
 import leap
-from IK_Zilin import InverseKinematics
+# from IK_Zilin import InverseKinematics
+# from IK import my_InverseKinematics
 
 class TeachMover:
-    m1, m2, m3, m4, m5, m6 = 1768, 1100, 1040, 420, 0, 750
+    m1, m2, m3, m4, m5, m6 = 1768, 1100, 1040, 420, 0, 900
 
     def __init__(self, portID: str, baudrate = 9600):
         try:
-            self.con=serial.Serial(portID,baudrate,timeout=4)
+            self.con = serial.Serial(portID,baudrate,timeout=3)
             print("Success")
-
         except serial.SerialException as e:
             print("Error")
             return
+        
         # Sets motor step attributes to starting position values
         self.m1 = 1768
         self.m2 = 1100
         self.m3 = 1040
         self.m4 = 420
         self.m5 = 0
-        self.m6 = 750
+        self.m6 = 900
         self.lock = threading.Lock()
 
     def send_cmd(self, cmd:str):
@@ -55,7 +56,7 @@ class TeachMover:
         # FIXME: send_cmd will never return a response from the robot since the function will terminate before the thread does
         # print(response)
         self.con.write(cmd.encode())
-        response = self.con.readline().decode().strip()
+        response = self.con.read(100).decode().strip()
         return response
     
     def move(self, spd, j1, j2, j3, j4, j5, j6):
@@ -67,16 +68,16 @@ class TeachMover:
             gripper_adj = int(0.25*j3)
         cmd = f"@STEP {spd}, {j1}, {j2}, {j3}, {j4+j5}, {j4-j5}, {j6+gripper_adj}"
         response = self.send_cmd(cmd)
-        if response != "locked":
-            print(cmd)
-            self.increment_motors(j1, j2, j3, j4+j5, j4-j5, j6+gripper_adj)
+        # if response != "locked":
+        print(cmd)
+        self.increment_motors(j1, j2, j3, j4+j5, j4-j5, j6+gripper_adj)
         return response
     
     def set_step(self, spd, j1, j2, j3, j4, j5, j6):
         # prevent overextending the robot
-        if (j1>7072 or j1<0 or j2>7072 or j2<0 or j3>4158 or j3<0 or j4>1536 or j4<0 or j5>1536 or j5<0 or j6>2330 or j6<0):
+        if (j1>7072 or j1<0 or j2>7072 or j2<0 or j3>4158 or j3<0 or j4>1536 or j4<0 or j5>1536 or j5<0): # removed  or j6>2330 or j6<0 bc erros in grip will cause code to stop running
             print("Given motor step values are out of range")
-            return
+            return False
         gripper_adj = 0
         diff1 = j1 - self.m1
         diff2 = j2 - self.m2
@@ -84,18 +85,19 @@ class TeachMover:
         diff4 = j4 - self.m4
         diff5 = j5 - self.m5
         diff6 = j6 - self.m6
-        if diff3 > 0:
-            gripper_adj = int(0.5*diff3)
-        elif diff3 < 0:
-            gripper_adj = int(0.5*diff3)
+        # if diff3 > 0:
+        #     gripper_adj = int(0.5*diff3)
+        # elif diff3 < 0:
+        #     gripper_adj = int(0.5*diff3)
+        gripper_adj = int(0.5 * diff3)
         # FIXME: diff2 causes the gripper to open and close
-        cmd = f"@STEP {spd}, {diff1}, {diff2}, {diff3}, {diff4+diff5}, {diff4-diff5}, {diff6+gripper_adj}"
+        cmd = f"@STEP {spd}, {diff1}, {diff2}, {diff3}, {diff4+diff5}, {diff4-diff5}, {diff6 + gripper_adj}"
         response = self.send_cmd(cmd)
-        if response != "locked":
-            print(f"Going to motor steps {j1} {j2} {j3} {j4} {j5} {j6}")
-            self.increment_motors(diff1, diff2, diff3, diff4+diff5, diff4-diff5, diff6+gripper_adj)
-            print(cmd)
-        return response
+        # if response != "locked":
+        print(f"Going to motor steps {j1} {j2} {j3} {j4} {j5} {j6}")
+        self.increment_motors(diff1, diff2, diff3, diff4+diff5, diff4-diff5, diff6 + gripper_adj)
+        print(cmd)
+        return True
     
     def returnToStart(self):
         '''
@@ -107,13 +109,19 @@ class TeachMover:
         j5 = -int(currentPos[4])
         j6 = -int(currentPos[5])-j3
         '''
+        j1 = 1768 - self.m1
+        j2 = 1100 - self.m2
+        j3 = 1040 - self.m3
+        j4 = 420 - self.m4
+        j5 = -self.m5
+        j6 = 900 - self.m6
         # ret = self.move(240, 1768-self.m1, 1100-self.m2, 1040-self.m3, -self.m4, -self.m5, 750-self.m6)
-        cmd = f"@STEP 240, {1768-self.m1}, {1100-self.m2}, {1040-self.m3}, {420-self.m4}, {-self.m5}, {750-self.m6}"
+        cmd = f"@STEP 240, {j1}, {j2}, {j3}, {j4}, {j5}, {j6}"
         response = self.send_cmd(cmd)
         if response != "locked":
             print("returning to zero position")
-            self.increment_motors(1768-self.m1, 1100-self.m2, 1040-self.m3, 420-self.m4, -self.m5, 750-self.m6)
             print(cmd)
+            self.increment_motors(j1, j2, j3, j4, j5, j6)
         return response
 
     def increment_motors(self, j1, j2, j3, j4, j5, j6):
@@ -145,14 +153,16 @@ class TeachMover:
     
     def read_pos(self):
         print("Reading position")
-        cmd = "@READ"
+        cmd = "@READ\r"
+        self.con.flushInput()
         self.con.write(cmd.encode())
+        time.sleep(1)
         response = self.con.readline().decode().strip()
         #Strip the leading status code
         return response
 
     def readPosition(self):
-        ret = self.send_cmd("@READ")
+        ret = self.send_cmd("@READ\r")
         #Strip the leading status code
         ret = ret.split('\r')[-1]
         return ret
@@ -162,12 +172,13 @@ class TeachMover:
         # TODO: UPDATE ROBOT MOTOR VALUES
         # @CLOSE IS VERY SLOW SO I'M USING A MOVE INSTEAD
         # self.send_cmd("@CLOSE")
+        # self.set_motor_vals(self.m1, self.m2, self.m3, self.m4, self.m5, 0)
         self.move(240, 0, 0, 0, 0, 0, -self.m6)
 
     def open_grip(self):
-        if self.m6 < 1000:
+        if self.m6 < 1400:
             print("Opening grip")
-            self.move(240, 0, 0, 0, 0, 0, 1000-self.m6)
+            self.move(240, 0, 0, 0, 0, 0, 1400-self.m6)
         else:
             print("Grip already open")
 
@@ -175,6 +186,10 @@ class TeachMover:
         while self.lock.locked():
             continue
         return
+    
+    def close_conn(self):
+        if self.con.is_open:
+            self.con.close()
 
     counter = 0
     def test_thread(self, num):
@@ -197,20 +212,29 @@ class TeachMover:
 
 
 if __name__ == "__main__":
-    # INVERSE KINEMATICS TESTING
-    # IK = InverseKinematics(0,0,0,0,0)
-    # j1, j2, j3, j4, j5 = IK.FindStep(10, 2, 12, 0, 0)
-    # print(f"results: {j1}, {j2}, {j3}, {j4}, {j5}")
-
     robot = TeachMover('COM3')
+
+    # # INVERSE KINEMATICS TESTING
+    # IK = InverseKinematics()
+    # j1, j2, j3, j4, j5 = IK.FindStep(7, 0, 0, 0, 0)
+    # print(f"results: {j1}, {j2}, {j3}, {j4}, {j5}")
+    # robot.set_step(240, j1, j2, j3, j4, j5, robot.m6)
+
+    # @READ TESTS
     # response = robot.read_pos()
     # print(response)
-    # robot.open_grip()
-    # robot.move(240, 0,0,0,0,0,0)
-    robot.set_step(240, 1768, 1600, 1040, 420, 400, 750)
+    # response2 = robot.readPosition()
+    # print(response2)
+
+    # NOTE: Default position is (1768, 1100, 1040, 420, 0, 900)
+    # robot.move(240, 0,1200,800,0,0,0)
+    robot.set_step(240, 1768, 3100, 1440, 420, 0, 900)
     # robot.lock_wait()
+    time.sleep(3)
     # robot.open_grip()
-    robot.lock_wait()
+    # robot.open_grip()
+    # robot.lock_wait()
+    # time.sleep(3)
     # # robot.move(240, 0,0,0,-400,0,0)
     robot.returnToStart()
 
