@@ -1,16 +1,30 @@
+import threading
+
 class Buffer:
     def __init__(self):
-        self.data = []
+        self.data = None
+        self.lock = threading.Lock()
     
     def add(self, msg):
-        if len(self.data) > 4:
-            print("Buffer is full")
-        else:
-            self.data.append(msg)
+        with self.lock:
+            self.data = msg
 
     def get(self):
-        if len(self.data) > 0:
-            msg = self.data.pop()
+        with self.lock:
+            msg = self.data
+            self.data = None
             return msg
-        else:
-            print("No data in buffer")
+        
+    def isEmpty(self):
+        return self.data is None
+
+
+if __name__ == "__main__":
+    buffer = Buffer()
+    print(buffer.get())
+
+    buffer.add(1)
+    buffer.add("Fist")
+    buffer.add([1,2,3])
+    item = buffer.get()
+    print(item)
