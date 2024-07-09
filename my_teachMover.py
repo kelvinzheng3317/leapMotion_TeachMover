@@ -22,6 +22,7 @@ class TeachMover:
             self.con = serial.Serial(portID,baudrate,timeout=3)
             print("Success")
         except serial.SerialException as e:
+            print(e)
             print("Error")
             return
         
