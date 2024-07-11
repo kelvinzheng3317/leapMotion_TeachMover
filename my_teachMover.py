@@ -86,11 +86,11 @@ class TeachMover:
         diff4 = j4 - self.m4
         diff5 = j5 - self.m5
         diff6 = j6 - self.m6
-        # if diff3 > 0:
-        #     gripper_adj = int(0.5*diff3)
-        # elif diff3 < 0:
-        #     gripper_adj = int(0.5*diff3)
-        gripper_adj = int(0.5 * diff3)
+        if diff3 > 0:
+            gripper_adj = int(0.5*diff3)
+        elif diff3 < 0:
+            gripper_adj = 0
+        # gripper_adj = int(0.5 * diff3)
         # FIXME: diff2 causes the gripper to open and close
         cmd = f"@STEP {spd}, {diff1}, {diff2}, {diff3}, {diff4+diff5}, {diff4-diff5}, {diff6 + gripper_adj}"
         response = self.send_cmd(cmd)
@@ -229,10 +229,11 @@ if __name__ == "__main__":
 
     # NOTE: Default position is (1768, 1100, 1040, 420, 0, 900)
     # robot.move(240, 0,1200,800,0,0,0)
-    robot.set_step(240, 1768, 3100, 1440, 420, 0, 900)
+    robot.set_step(240, 1768, 1100, 1440, 420, 0, 900)
+    robot.set_step(240, 1768, 1100, 640, 420, 0, 900)
     # robot.lock_wait()
-    time.sleep(3)
-    # robot.open_grip()
+    # time.sleep(3)
+    # robot.close_grip()
     # robot.open_grip()
     # robot.lock_wait()
     # time.sleep(3)

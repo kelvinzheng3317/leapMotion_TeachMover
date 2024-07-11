@@ -147,9 +147,9 @@ def main():
                     if len(event.hands) > 0:
                         hand = event.hands[0]
                         
-                        x = hand.palm.position[2]  * 0.02 + 4 # * 0.016 + 7
+                        x = hand.palm.position[2] * 0.02 + 4 # * 0.016 + 7
                         y = hand.palm.position[0] * 0.035
-                        z = (hand.palm.position[1] * 0.02) - 4 # 0.05 - 3
+                        z = (hand.palm.position[1] * 0.02) - 3.5 # 0.05 - 3
                         if x < 0:
                             x = 0
                         # if z < 0: 

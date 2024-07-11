@@ -1,7 +1,6 @@
 #include <iostream>
 #include <string>
 #include <sstream>
-#include <format>
 #include <chrono>
 #include <thread>
 #include <windows.h>
@@ -11,7 +10,7 @@ using namespace std;
 
 string formatCmd(int spd, int j1, int j2, int j3, int j4, int j5, int j6) {
     stringstream oss;
-    oss << "@STEP "  << to_string(spd) << ", " << to_string(j1) << ", " << to_string(j2) << ", " << to_string(j3) + ", " << to_string(j4) + ", " << to_string(j5) + ", " << to_string(j6);
+    oss << "@STEP " << to_string(spd) << ", " << to_string(j1) << ", " << to_string(j2) << ", " << to_string(j3) + ", " << to_string(j4) + ", " << to_string(j5) + ", " << to_string(j6);
     return oss.str();
 }
 
@@ -24,12 +23,12 @@ void TeachMover::printLastErr() {
         error,
         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
         (LPTSTR)&errorMsg,
-        0, NULL );
+        0, NULL);
 
     cerr << "Serial port error code " << error << ": " << (char*)errorMsg;
     LocalFree(errorMsg);
 }
-     
+
 TeachMover::TeachMover(string portID) {
     // // Calculate the length of the wide string
     // int len = MultiByteToWideChar(CP_ACP, 0, portID.c_str(), -1, NULL, 0);
@@ -51,7 +50,7 @@ TeachMover::TeachMover(string portID) {
     printLastErr();
 
     // Configure the serial port
-    dcbSerialParams = {0};
+    dcbSerialParams = { 0 };
     dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
 
     if (!GetCommState(hSerial, &dcbSerialParams)) {
@@ -63,10 +62,10 @@ TeachMover::TeachMover(string portID) {
     dcbSerialParams.BaudRate = CBR_9600;
     dcbSerialParams.ByteSize = 8;
     dcbSerialParams.StopBits = ONESTOPBIT;
-    dcbSerialParams.Parity   = NOPARITY;
+    dcbSerialParams.Parity = NOPARITY;
 
     cout << "updated hSerial: " << hSerial << endl;
-    
+
     // Sets motor step attributes to starting position values
     m1 = 1768;
     m2 = 1100;
@@ -97,11 +96,11 @@ bool TeachMover::send_cmd(string cmd) {
         with self.lock:
             self.con.write(cmd.encode())
             return self.con.readline().decode().strip()
-    
+
     if self.lock.locked():
             print("Currently locked")
             return "locked"
-    
+
     thread = threading.Thread(target=msg_robot, args=[cmd])
     response = thread.start()
     */
@@ -116,7 +115,8 @@ bool TeachMover::send_cmd(string cmd) {
         // SetCommMask(hSerial, EV_TXEMPTY);
         // WaitCommEvent(hSerial, &eventMask, NULL);
         this_thread::sleep_for(5s);
-    } else {
+    }
+    else {
         cerr << "Error writing to serial port" << endl;
         printLastErr();
     }
@@ -126,20 +126,21 @@ bool TeachMover::send_cmd(string cmd) {
 bool TeachMover::move(int spd, int j1, int j2, int j3, int j4, int j5, int j6) {
     int gripper_adj = 0;
     if (j3 > 0) {
-        gripper_adj = int(0.5*j3);
-    } else {
-        gripper_adj = int(0.25*j3);
+        gripper_adj = int(0.5 * j3);
     }
-    string cmd = formatCmd(spd, j1, j2, j3, j4+j5, j4-j5, j6+gripper_adj);
+    else {
+        gripper_adj = int(0.25 * j3);
+    }
+    string cmd = formatCmd(spd, j1, j2, j3, j4 + j5, j4 - j5, j6 + gripper_adj);
     bool response = this->send_cmd(cmd);
     cout << cmd << endl;
-    this->increment_motors(j1, j2, j3, j4+j5, j4-j5, j6+gripper_adj);
+    this->increment_motors(j1, j2, j3, j4 + j5, j4 - j5, j6 + gripper_adj);
     return response;
 }
 
 bool TeachMover::set_step(int spd, int j1, int j2, int j3, int j4, int j5, int j6) {
     // prevent overextending the robot
-    if (j1>7072 or j1<0 or j2>7072 or j2<0 or j3>4158 or j3<0 or j4>1536 or j4<0 or j5>1536 or j5<0) {
+    if (j1 > 7072 || j1 < 0 || j2>7072 || j2 < 0 || j3>4158 || j3 < 0 || j4>1536 || j4 < 0 || j5>1536 || j5 < 0) {
         cout << "Given motor step values are out of range" << endl;
         return false;
     }
@@ -155,7 +156,7 @@ bool TeachMover::set_step(int spd, int j1, int j2, int j3, int j4, int j5, int j
     bool response = this->send_cmd(cmd);
     // if response != "locked":
     cout << "Going to motor steps " << j1 << " " << j2 << " " << j3 << " " << j4 << " " << j5 << " " << j6 << endl;
-    this->increment_motors(diff1, diff2, diff3, diff4+diff5, diff4-diff5, diff6 + gripper_adj);
+    this->increment_motors(diff1, diff2, diff3, diff4 + diff5, diff4 - diff5, diff6 + gripper_adj);
     cout << cmd << endl;
     return response;
 }
@@ -208,7 +209,7 @@ void TeachMover::set_motor_vals(int m1, int m2, int m3, int m4, int m5, int m6) 
 }
 
 void TeachMover::print_motors() {
-    cout << "step motors: " << m1 << ", " << m2 << ", " << m3 << ", "<< m4 << ", "<< m5 << ", "<< m6 << endl;
+    cout << "step motors: " << m1 << ", " << m2 << ", " << m3 << ", " << m4 << ", " << m5 << ", " << m6 << endl;
 }
 
 // Resets what the robot considers its "0 Position"
@@ -249,7 +250,8 @@ void TeachMover::open_grip() {
     if (m6 < 1400) {
         cout << "Opening grip" << endl;
         move(240, 0, 0, 0, 0, 0, 1500 - m6);
-    } else {
+    }
+    else {
         cout << "Grip already open" << endl;
     }
 }
@@ -298,43 +300,43 @@ int main(int argc, char* argv[]) {
     robot.set_step(240, 1768, 3100, 1440, 420, 0, 900);
     robot.returnToStart();
 
-//     # # INVERSE KINEMATICS TESTING
-//     # IK = InverseKinematics()
-//     # j1, j2, j3, j4, j5 = IK.FindStep(7, 0, 0, 0, 0)
-//     # print(f"results: {j1}, {j2}, {j3}, {j4}, {j5}")
-//     # robot.set_step(240, j1, j2, j3, j4, j5, robot.m6)
+    //     # # INVERSE KINEMATICS TESTING
+    //     # IK = InverseKinematics()
+    //     # j1, j2, j3, j4, j5 = IK.FindStep(7, 0, 0, 0, 0)
+    //     # print(f"results: {j1}, {j2}, {j3}, {j4}, {j5}")
+    //     # robot.set_step(240, j1, j2, j3, j4, j5, robot.m6)
 
-//     # @READ TESTS
-//     # response = robot.read_pos()
-//     # print(response)
-//     # response2 = robot.readPosition()
-//     # print(response2)
+    //     # @READ TESTS
+    //     # response = robot.read_pos()
+    //     # print(response)
+    //     # response2 = robot.readPosition()
+    //     # print(response2)
 
-//     # NOTE: Default position is (1768, 1100, 1040, 420, 0, 900)
-//     # robot.move(240, 0,1200,800,0,0,0)
-//     robot.set_step(240, 1768, 3100, 1440, 420, 0, 900)
-//     # robot.lock_wait()
-//     robot.returnToStart()
+    //     # NOTE: Default position is (1768, 1100, 1040, 420, 0, 900)
+    //     # robot.move(240, 0,1200,800,0,0,0)
+    //     robot.set_step(240, 1768, 3100, 1440, 420, 0, 900)
+    //     # robot.lock_wait()
+    //     robot.returnToStart()
 
-//     # NOTE: BASIC THREAD TESTING
-//     # robot.test_thread(1)
-//     # for i in range(10):
-//     #     print(f"Iteration {i}")
-//     #     robot.test_thread(i)
-//     #     time.sleep(0.1)
-//     # time.sleep(5)
-//     # print(robot.counter)
+    //     # NOTE: BASIC THREAD TESTING
+    //     # robot.test_thread(1)
+    //     # for i in range(10):
+    //     #     print(f"Iteration {i}")
+    //     #     robot.test_thread(i)
+    //     #     time.sleep(0.1)
+    //     # time.sleep(5)
+    //     # print(robot.counter)
 
-//     # NOTE: ROBOT MOVE THREAD TESTING
-//     # i = 0
-//     # while True:
-//     #     print(f"iteration {i}")
-//     #     robot.move(200,100,10,0,0,0,0)
-//     #     time.sleep(0.1)
-//     #     i += 1
+    //     # NOTE: ROBOT MOVE THREAD TESTING
+    //     # i = 0
+    //     # while True:
+    //     #     print(f"iteration {i}")
+    //     #     robot.move(200,100,10,0,0,0,0)
+    //     #     time.sleep(0.1)
+    //     #     i += 1
 
-//     # NOTE: @READ TESTING
-//     # pos = robot.readPosition()
-//     # print(type(pos))
-//     # print(pos)
+    //     # NOTE: @READ TESTING
+    //     # pos = robot.readPosition()
+    //     # print(type(pos))
+    //     # print(pos)
 }
